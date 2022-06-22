@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+
+  "include": ["lib/index.ts"],
+  "exclude": ["test/**/*.test.ts", "test/**/*.test.js"],
+
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "commonjs",
+
+    "outDir": "./dist",
+    "declaration": true,
+    "allowJs": true,
+
+    "resolveJsonModule": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}
