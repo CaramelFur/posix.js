@@ -11,7 +11,8 @@ executors:
 
 jobs:
   build_and_test:
-    executor: 
+    parallelism: 5
+    executor:
       name: node-18
     steps:
       - checkout
@@ -23,6 +24,8 @@ jobs:
       - run:
           command: yarn test
           name: Run tests
+      - store_test_results:
+          path: test_results
 
 workflows:
   main:
