@@ -4,7 +4,7 @@ import {
   SwapConstants,
   SyslogConstantsFacilities,
   SyslogConstantsOptions,
-  SyslogConstantsPriorities,
+  SyslogConstantsPriorities
 } from './addontype';
 
 const SupportedPlatforms = [
@@ -23,7 +23,11 @@ if (!SupportedPlatforms.includes(process.platform)) {
   throw new Error(`Platform ${process.platform} is not supported`);
 }
 
-const Posix = LoadBinding('posix_addon') as AddonType;
+const Posix = LoadBinding(
+  process.env['MOCK_POSIX'] ?
+  'posix_addon_mocked' :
+  'posix_addon'
+) as AddonType;
 
 export const {
   getgid,

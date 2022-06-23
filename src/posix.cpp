@@ -1,17 +1,6 @@
 #include <napi.h>
 
-// Error if building on non-posix system
-#if !defined(__unix__) && !defined(__linux__) && !defined(__APPLE__) && !defined(__ANDROID__)
-#error "This module is only supported on POSIX systems"
-#endif
-
-#include <unistd.h>
-#include <sys/resource.h> // setrlimit, getrlimit
-#include <pwd.h>          // getpwnam, passwd
-#include <grp.h>          // getgrnam, group
-#include <syslog.h>       // openlog, closelog, syslog, setlogmask
-#include <sys/swap.h>     // swapon, swapoff
-#include <errno.h>        // errno
+#include "posix.h"
 
 Napi::Value throw_error(const Napi::CallbackInfo &info, bool typeError, const char *message, int errorno = 0)
 {
@@ -27,7 +16,8 @@ Napi::Value throw_error(const Napi::CallbackInfo &info, bool typeError, const ch
 
   length += 32;
 
-  char error_message[length] = {0};
+  char *error_message = new char[length];
+  memset(error_message, 0, length);
 
   strcat(error_message, "[ERROR] ");
   if (error_str != NULL)
@@ -57,7 +47,7 @@ Napi::Value node_getuid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "getuid: takes no arguments");
 
-  return Napi::Number::New(env, getuid());
+  return Napi::Number::New(env, posix_getuid());
 }
 
 Napi::Value node_getgid(const Napi::CallbackInfo &info)
@@ -67,7 +57,7 @@ Napi::Value node_getgid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "getgid: takes no arguments");
 
-  return Napi::Number::New(env, getgid());
+  return Napi::Number::New(env, posix_getgid());
 }
 
 Napi::Value node_setuid(const Napi::CallbackInfo &info)
@@ -85,8 +75,7 @@ Napi::Value node_setuid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
-    errno = 0;
-    passwd *pwd = getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    passwd *pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
       return throw_error(info, true, "setuid: getpwnam failed", errno);
     if (!pwd)
@@ -98,7 +87,7 @@ Napi::Value node_setuid(const Napi::CallbackInfo &info)
     return throw_error(info, true, "setuid: argument must be a number or a string");
   }
 
-  if (setuid(uid) == -1)
+  if (posix_setuid(uid) == -1)
     return throw_error(info, false, "setuid: failed to set uid", errno);
 
   return env.Undefined();
@@ -119,8 +108,7 @@ Napi::Value node_setgid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
-    errno = 0;
-    group *grp = getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
       return throw_error(info, true, "setgid: getgrnam failed", errno);
     if (!grp)
@@ -132,7 +120,7 @@ Napi::Value node_setgid(const Napi::CallbackInfo &info)
     return throw_error(info, true, "setgid: argument must be a number or a string");
   }
 
-  if (setgid(gid) == -1)
+  if (posix_setgid(gid) == -1)
     return throw_error(info, false, "setgid: failed to set gid", errno);
 
   return env.Undefined();
@@ -145,7 +133,7 @@ Napi::Value node_geteuid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "geteuid: takes no arguments");
 
-  return Napi::Number::New(env, geteuid());
+  return Napi::Number::New(env, posix_geteuid());
 }
 
 Napi::Value node_getegid(const Napi::CallbackInfo &info)
@@ -155,7 +143,7 @@ Napi::Value node_getegid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "getegid: takes no arguments");
 
-  return Napi::Number::New(env, getegid());
+  return Napi::Number::New(env, posix_getegid());
 }
 
 Napi::Value node_seteuid(const Napi::CallbackInfo &info)
@@ -173,8 +161,7 @@ Napi::Value node_seteuid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
-    errno = 0;
-    passwd *pwd = getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    passwd *pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
       return throw_error(info, true, "seteuid: getpwnam failed", errno);
     if (!pwd)
@@ -186,7 +173,7 @@ Napi::Value node_seteuid(const Napi::CallbackInfo &info)
     return throw_error(info, true, "seteuid: argument must be a number or a string");
   }
 
-  if (seteuid(uid) == -1)
+  if (posix_seteuid(uid) == -1)
     return throw_error(info, false, "seteuid: failed to set uid", errno);
 
   return env.Undefined();
@@ -207,8 +194,7 @@ Napi::Value node_setegid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
-    errno = 0;
-    group *grp = getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
       return throw_error(info, true, "setegid: getgrnam failed", errno);
     if (!grp)
@@ -220,7 +206,7 @@ Napi::Value node_setegid(const Napi::CallbackInfo &info)
     return throw_error(info, true, "setegid: argument must be a number or a string");
   }
 
-  if (setegid(gid) == -1)
+  if (posix_setegid(gid) == -1)
     return throw_error(info, false, "setegid: failed to set gid", errno);
 
   return env.Undefined();
@@ -233,7 +219,7 @@ Napi::Value node_getpid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "getpid: takes no arguments");
 
-  return Napi::Number::New(env, getpid());
+  return Napi::Number::New(env, posix_getpid());
 }
 
 Napi::Value node_getpgrp(const Napi::CallbackInfo &info)
@@ -243,7 +229,7 @@ Napi::Value node_getpgrp(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "getgrp: takes no arguments");
 
-  return Napi::Number::New(env, getpgrp());
+  return Napi::Number::New(env, posix_getpgrp());
 }
 
 Napi::Value node_getppid(const Napi::CallbackInfo &info)
@@ -253,7 +239,7 @@ Napi::Value node_getppid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "getppid: takes no arguments");
 
-  return Napi::Number::New(env, getppid());
+  return Napi::Number::New(env, posix_getppid());
 }
 
 Napi::Value node_getpgid(const Napi::CallbackInfo &info)
@@ -266,7 +252,7 @@ Napi::Value node_getpgid(const Napi::CallbackInfo &info)
   if (!info[0].IsNumber())
     return throw_error(info, true, "getpgid: first argument must be a number");
 
-  pid_t pid = getpgid(info[0].As<Napi::Number>().Int32Value());
+  pid_t pid = posix_getpgid(info[0].As<Napi::Number>().Int32Value());
   if (pid == -1)
     return throw_error(info, false, "getpgid: failed to get pgid", errno);
 
@@ -286,7 +272,7 @@ Napi::Value node_setpgid(const Napi::CallbackInfo &info)
   if (!info[1].IsNumber())
     return throw_error(info, true, "setpgid: second argument must be a number");
 
-  if (setpgid(info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()))
+  if (posix_setpgid(info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()))
     return throw_error(info, false, "setpgid: failed", errno);
 
   return env.Undefined();
@@ -299,7 +285,7 @@ Napi::Value node_setsid(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "setsid: takes no arguments");
 
-  pid_t pid = setsid();
+  pid_t pid = posix_setsid();
   if (pid == -1)
     return throw_error(info, false, "setsid: failed", errno);
 
@@ -316,7 +302,7 @@ Napi::Value node_getsid(const Napi::CallbackInfo &info)
   if (!info[0].IsNumber())
     return throw_error(info, true, "getsid: first argument must be a number");
 
-  pid_t pid = getsid(info[0].As<Napi::Number>().Int32Value());
+  pid_t pid = posix_getsid(info[0].As<Napi::Number>().Int32Value());
   if (pid == -1)
     return throw_error(info, false, "getsid: failed", errno);
 
@@ -336,10 +322,10 @@ Napi::Value node_chroot(const Napi::CallbackInfo &info)
   const char *path = info[0].As<Napi::String>().Utf8Value().c_str();
 
   // Proper order is to first chdir() then chroot()
-  if (chdir(path))
+  if (posix_chdir(path))
     return throw_error(info, false, "chroot: failed to change directory", errno);
 
-  if (chroot(path))
+  if (posix_chroot(path))
     return throw_error(info, false, "chroot: failed", errno);
 
   return env.Undefined();
@@ -356,7 +342,7 @@ Napi::Value node_getrlimit(const Napi::CallbackInfo &info)
     return throw_error(info, true, "getrlimit: first argument must be a number");
 
   struct rlimit limit;
-  if (getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
+  if (posix_getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
     return throw_error(info, false, "getrlimit: failed", errno);
 
   Napi::Object obj = Napi::Object::New(env);
@@ -381,7 +367,7 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
 
   struct rlimit limit;
   // Pre populate with current values
-  if (getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
+  if (posix_getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
     return throw_error(info, false, "setrlimit: failed", errno);
 
   Napi::Object obj = info[1].As<Napi::Object>();
@@ -418,7 +404,7 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
     }
   }
 
-  if (setrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
+  if (posix_setrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
     return throw_error(info, false, "setrlimit: failed", errno);
 
   return env.Undefined();
@@ -432,12 +418,11 @@ Napi::Value node_getpwnam(const Napi::CallbackInfo &info)
     return throw_error(info, true, "getpwnam: takes 1 argument");
 
   struct passwd *pwd;
-  errno = 0; // reset errno before the call
 
   if (info[0].IsString())
-    pwd = getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
   else if (info[0].IsNumber())
-    pwd = getpwuid(info[0].As<Napi::Number>().Int32Value());
+    pwd = posix_getpwuid(info[0].As<Napi::Number>().Int32Value());
   else
     return throw_error(info, true, "getpwnam: first argument must be a string or number");
 
@@ -471,12 +456,11 @@ Napi::Value node_getgrnam(const Napi::CallbackInfo &info)
     return throw_error(info, true, "getgrnam: takes 1 argument");
 
   struct group *grp;
-  errno = 0; // reset errno before the call
 
   if (info[0].IsString())
-    grp = getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
   else if (info[0].IsNumber())
-    grp = getgrgid(info[0].As<Napi::Number>().Int32Value());
+    grp = posix_getgrgid(info[0].As<Napi::Number>().Int32Value());
   else
     return throw_error(info, true, "getgrnam: first argument must be a string or number");
 
@@ -509,16 +493,27 @@ Napi::Value node_initgroups(const Napi::CallbackInfo &info)
   if (!info[0].IsString())
     return throw_error(info, true, "initgroups: first argument must be a string");
 
-  gid_t group;
+  gid_t gid;
 
   if (info[1].IsNumber())
-    group = info[1].As<Napi::Number>().Int32Value();
+  {
+    gid = info[1].As<Napi::Number>().Int32Value();
+  }
   else if (info[1].IsString())
-    group = getgrnam(info[1].As<Napi::String>().Utf8Value().c_str())->gr_gid;
+  {
+    group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    if (errno)
+      return throw_error(info, true, "initgroups: getgrnam failed", errno);
+    if (!grp)
+      return throw_error(info, true, "initgroups: group not found");
+    gid = grp->gr_gid;
+  }
   else
+  {
     return throw_error(info, true, "initgroups: second argument must be a number or string");
+  }
 
-  if (initgroups(info[0].As<Napi::String>().Utf8Value().c_str(), group))
+  if (posix_initgroups(info[0].As<Napi::String>().Utf8Value().c_str(), gid))
     return throw_error(info, false, "initgroups: failed", errno);
 
   return env.Undefined();
@@ -535,20 +530,42 @@ Napi::Value node_setregid(const Napi::CallbackInfo &info)
   gid_t egid;
 
   if (info[0].IsNumber())
+  {
     rgid = info[0].As<Napi::Number>().Int32Value();
+  }
   else if (info[0].IsString())
-    rgid = getgrnam(info[0].As<Napi::String>().Utf8Value().c_str())->gr_gid;
+  {
+    group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    if (errno)
+      return throw_error(info, true, "setregid: getgrnam failed", errno);
+    if (!grp)
+      return throw_error(info, true, "setregid: group not found");
+    rgid = grp->gr_gid;
+  }
   else
+  {
     return throw_error(info, true, "setregid: first argument must be a string or number");
+  }
 
   if (info[1].IsNumber())
+  {
     egid = info[1].As<Napi::Number>().Int32Value();
+  }
   else if (info[1].IsString())
-    egid = getgrnam(info[1].As<Napi::String>().Utf8Value().c_str())->gr_gid;
+  {
+    group *grp = posix_getgrnam(info[1].As<Napi::String>().Utf8Value().c_str());
+    if (errno)
+      return throw_error(info, true, "setregid: getgrnam failed", errno);
+    if (!grp)
+      return throw_error(info, true, "setregid: group not found");
+    egid = grp->gr_gid;
+  }
   else
+  {
     return throw_error(info, true, "setregid: second argument must be a string or number");
+  }
 
-  if (setregid(rgid, egid))
+  if (posix_setregid(rgid, egid))
     return throw_error(info, false, "setregid: failed", errno);
 
   return env.Undefined();
@@ -565,20 +582,42 @@ Napi::Value node_setreuid(const Napi::CallbackInfo &info)
   uid_t euid;
 
   if (info[0].IsNumber())
+  {
     ruid = info[0].As<Napi::Number>().Int32Value();
+  }
   else if (info[0].IsString())
-    ruid = getpwnam(info[0].As<Napi::String>().Utf8Value().c_str())->pw_uid;
+  {
+    passwd *pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    if (errno)
+      return throw_error(info, true, "setreuid: getpwnam failed", errno);
+    if (!pwd)
+      return throw_error(info, true, "setreuid: user not found");
+    ruid = pwd->pw_uid;
+  }
   else
+  {
     return throw_error(info, true, "setreuid: first argument must be a string or number");
+  }
 
   if (info[1].IsNumber())
+  {
     euid = info[1].As<Napi::Number>().Int32Value();
+  }
   else if (info[1].IsString())
-    euid = getpwnam(info[1].As<Napi::String>().Utf8Value().c_str())->pw_uid;
+  {
+    passwd *pwd = posix_getpwnam(info[1].As<Napi::String>().Utf8Value().c_str());
+    if (errno)
+      return throw_error(info, true, "setreuid: getpwnam failed", errno);
+    if (!pwd)
+      return throw_error(info, true, "setreuid: user not found");
+    euid = pwd->pw_uid;
+  }
   else
+  {
     return throw_error(info, true, "setreuid: second argument must be a string or number");
+  }
 
-  if (setreuid(ruid, euid))
+  if (posix_setreuid(ruid, euid))
     return throw_error(info, false, "setreuid: failed", errno);
 
   return env.Undefined();
@@ -608,7 +647,7 @@ Napi::Value node_openlog(const Napi::CallbackInfo &info)
   strncpy(syslog_ident, info[0].As<Napi::String>().Utf8Value().c_str(), MAX_SYSLOG_IDENT);
   syslog_ident[MAX_SYSLOG_IDENT] = 0;
 
-  openlog(syslog_ident, info[1].As<Napi::Number>().Int32Value(), info[2].As<Napi::Number>().Int32Value());
+  posix_openlog(syslog_ident, info[1].As<Napi::Number>().Int32Value(), info[2].As<Napi::Number>().Int32Value());
 
   return env.Undefined();
 }
@@ -620,7 +659,7 @@ Napi::Value node_closelog(const Napi::CallbackInfo &info)
   if (info.Length() != 0)
     return throw_error(info, true, "closelog: takes 0 arguments");
 
-  closelog();
+  posix_closelog();
 
   return env.Undefined();
 }
@@ -638,7 +677,7 @@ Napi::Value node_syslog(const Napi::CallbackInfo &info)
   if (!info[1].IsString())
     return throw_error(info, true, "syslog: second argument must be a string");
 
-  syslog(info[0].As<Napi::Number>().Int32Value(), "%s", info[1].As<Napi::String>().Utf8Value().c_str());
+  posix_syslog(info[0].As<Napi::Number>().Int32Value(), "%s", info[1].As<Napi::String>().Utf8Value().c_str());
 
   return env.Undefined();
 }
@@ -653,7 +692,7 @@ Napi::Value node_setlogmask(const Napi::CallbackInfo &info)
   if (!info[0].IsNumber())
     return throw_error(info, true, "setlogmask: first argument must be a number");
 
-  return Napi::Number::New(env, setlogmask(info[0].As<Napi::Number>().Int32Value()));
+  return Napi::Number::New(env, posix_setlogmask(info[0].As<Napi::Number>().Int32Value()));
 }
 
 Napi::Value node_gethostname(const Napi::CallbackInfo &info)
@@ -669,7 +708,7 @@ Napi::Value node_gethostname(const Napi::CallbackInfo &info)
 
   char hostname[HOST_NAME_MAX + 1] = {0};
 
-  if (gethostname(hostname, HOST_NAME_MAX) != 0)
+  if (posix_gethostname(hostname, HOST_NAME_MAX) != 0)
     return throw_error(info, false, "gethostname: failed", errno);
 
   return Napi::String::New(env, hostname);
@@ -685,7 +724,7 @@ Napi::Value node_sethostname(const Napi::CallbackInfo &info)
   if (!info[0].IsString())
     return throw_error(info, true, "sethostname: first argument must be a string");
 
-  if (sethostname(info[0].As<Napi::String>().Utf8Value().c_str(), info[0].As<Napi::String>().Utf8Value().length()) != 0)
+  if (posix_sethostname(info[0].As<Napi::String>().Utf8Value().c_str(), info[0].As<Napi::String>().Utf8Value().length()) != 0)
     return throw_error(info, false, "sethostname: failed", errno);
 
   return env.Undefined();
@@ -704,7 +743,7 @@ Napi::Value node_swapon(const Napi::CallbackInfo &info)
   if (!info[1].IsNumber())
     return throw_error(info, true, "swapon: second argument must be a number");
 
-  if (swapon(info[0].As<Napi::String>().Utf8Value().c_str(), info[1].As<Napi::Number>().Int32Value()) != 0)
+  if (posix_swapon(info[0].As<Napi::String>().Utf8Value().c_str(), info[1].As<Napi::Number>().Int32Value()) != 0)
     return throw_error(info, false, "swapon: failed", errno);
 
   return env.Undefined();
@@ -720,7 +759,7 @@ Napi::Value node_swapoff(const Napi::CallbackInfo &info)
   if (!info[0].IsString())
     return throw_error(info, true, "swapoff: first argument must be a string");
 
-  if (swapoff(info[0].As<Napi::String>().Utf8Value().c_str()) != 0)
+  if (posix_swapoff(info[0].As<Napi::String>().Utf8Value().c_str()) != 0)
     return throw_error(info, false, "swapoff: failed", errno);
 
   return env.Undefined();
