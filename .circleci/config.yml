@@ -32,7 +32,7 @@ jobs:
           command: yarn build
           name: Build app
       - run:
-          command: sudo yarn test-ci
+          command: sudo -E yarn test-ci
           name: Run tests
       - store_test_results:
           path: ./reports/junit
