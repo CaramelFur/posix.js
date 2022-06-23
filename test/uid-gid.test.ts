@@ -49,24 +49,19 @@ describe('uid and gid - Correct', () => {
     expect(result).toBe(0);
   });
 
-  test('setgid(1000)', () => {
-    posix.setgid(1000);
+  test('setgid(0)', () => {
+    posix.setgid(0);
 
     const result = posix.getgid();
 
-    expect(result).toBe(1000);
+    expect(result).toBe(0);
   });
 
-  test('setuid(1000)', () => {
-    posix.setuid(1000);
+  test('setuid(0)', () => {
+    posix.setuid(0);
 
     let result = posix.getuid();
 
-    expect(result).toBe(1000);
-  });
-
-  test('hmmm', () => {
-    let a = posix.getpwnam(1000);
-    console.log(a);
+    expect(result).toBe(0);
   });
 });

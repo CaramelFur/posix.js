@@ -50,18 +50,18 @@ describe('euid and egid - Correct', () => {
   });
 
   test('setgid()', () => {
-    posix.setegid(1000);
+    posix.setegid(0);
 
     const result = posix.getegid();
 
-    expect(result).toBe(1000);
+    expect(result).toBe(0);
   });
 
   test('setuid()', () => {
-    posix.seteuid(1000);
+    posix.seteuid(0);
 
     let result = posix.geteuid();
 
-    expect(result).toBe(1000);
+    expect(result).toBe(0);
   });
 });
