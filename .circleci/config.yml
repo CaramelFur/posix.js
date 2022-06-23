@@ -36,6 +36,9 @@ jobs:
           name: Run tests
       - store_test_results:
           path: ./reports/junit
+      - store_artifacts:
+          path: ./reports/junit
+          destination: reports
 
 workflows:
   main:
