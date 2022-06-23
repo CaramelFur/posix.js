@@ -24,6 +24,7 @@ jobs:
       - checkout
       - node/install:
           node-version: << parameters.node-version >>
+          node-install-dir: /usr/local
           install-yarn: true
       - node/install-packages:
           pkg-manager: yarn
@@ -36,6 +37,9 @@ jobs:
           name: Run tests
       - store_test_results:
           path: ./reports/junit
+      - store_artifacts:
+          path: ./reports/junit
+          destination: reports
 
 workflows:
   main:
