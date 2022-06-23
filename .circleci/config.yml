@@ -1,21 +1,29 @@
 version: 2.1
 
+executors:
+  docker:
+    docker:
+      - image: cimg/base:2020.01
+  macos:
+    macos:
+      xcode: 11.4
+
 orbs:
   node: circleci/node@5.0.2
 
-executors:
-  node-18:
-    docker:
-      - image: cimg/node:18.4
-      - image: cimg/node:17.9
-
 jobs:
-  build_and_test:
-    parallelism: 1
-    executor:
-      name: node-18
+  test:
+    parameters:
+      os:
+        type: executor
+      node-version:
+        type: string
+    executor: << parameters.os >>
     steps:
       - checkout
+      - node/install:
+          node-version: << parameters.node-version >>
+          install-yarn: true
       - node/install-packages:
           pkg-manager: yarn
       - run:
@@ -30,4 +38,54 @@ jobs:
 workflows:
   main:
     jobs:
-      - build_and_test
+      - test:
+          matrix:
+            parameters:
+              os: [docker]
+              node-version: ["18.4.0", "17.9.0"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
