@@ -1,15 +1,22 @@
 version: 2.1
+
 orbs:
   node: circleci/node@5.0.2
 
+executors:
+  node-18:
+    docker:
+      - image: circleci/node:18
+      - image: circleci/node:16
+
 jobs:
   build_and_test:
-    executor: node/default
+    executor: 
+      name: node-18
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: yarn
-
       - run:
           command: yarn build
           name: Build app
