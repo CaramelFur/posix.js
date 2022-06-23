@@ -4,7 +4,8 @@ executors:
   docker:
     docker:
       - image: cimg/base:current
-        #user: root
+        user: root
+        
   macos:
     macos:
       xcode: 11.4
@@ -24,6 +25,7 @@ jobs:
       - checkout
       - node/install:
           node-version: << parameters.node-version >>
+          node-install-dir: /usr/local
           install-yarn: true
       - node/install-packages:
           pkg-manager: yarn
