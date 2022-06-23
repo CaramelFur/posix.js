@@ -32,6 +32,8 @@ jobs:
           command: yarn build
           name: Build app
       - run:
+          command: whereis yarn; sudo whereis yarn;
+      - run:
           command: sudo -E yarn test-ci
           name: Run tests
       - store_test_results:
