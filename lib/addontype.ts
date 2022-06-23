@@ -53,18 +53,31 @@ export interface SwapConstants {
 }
 
 export interface AddonType {
+  getuid: () => number;
+  getgid: () => number;
+  setuid: (uid: number | string) => void;
+  setgid: (gid: number | string) => void;
+
+  geteuid: () => number;
+  getegid: () => number;
+  seteuid: (uid: number | string) => void;
+  setegid: (gid: number | string) => void;
+
+  getpid: () => number;
+  getpgrp: () => number;
   getppid(): number;
   getpgid(pid: number): number;
   setpgid(pid: number, pgid: number): void;
 
   setsid(): number;
+  getsid(pid: number): number;
 
   chroot(path: string): void;
 
   getrlimit(type: number): { cur: number; max: number };
   setrlimit(type: number, lim: { cur: number; max: number }): void;
 
-  getpwnam(name: string): {
+  getpwnam(name: number | string): {
     name: string;
     passwd: string;
     uid: number;
@@ -73,7 +86,7 @@ export interface AddonType {
     dir: string;
     shell: string;
   };
-  getgrnam(name: string): {
+  getgrnam(name: number | string): {
     name: string;
     passwd: string;
     gid: number;

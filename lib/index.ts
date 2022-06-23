@@ -26,20 +26,21 @@ if (!SupportedPlatforms.includes(process.platform)) {
 const Posix = LoadBinding('posix_addon') as AddonType;
 
 export const {
-  getegid,
-  geteuid,
   getgid,
   getuid,
-  setegid,
-  seteuid,
   setgid,
   setuid,
-} = process as Required<typeof process>;
-export const {
+  getegid,
+  geteuid,
+  setegid,
+  seteuid,
+  getpid,
+  getpgrp,
   getppid,
   getpgid,
   setpgid,
   setsid,
+  getsid,
   chroot,
   getrlimit,
   setrlimit,
@@ -53,10 +54,6 @@ export const {
   sethostname,
   swapoff,
 } = Posix;
-
-export function getpgrp() {
-  return getpgid(0);
-}
 
 const swapConstants = Posix.getswapConstants();
 const syslogConstants = Posix.getsyslogConstants();
