@@ -9,4 +9,7 @@ module.exports = {
       { outputDirectory: './reports/junit' },
     ],
   ],
+  automock: false,
+  clearMocks: true,
+  restoreMocks: true,
 };

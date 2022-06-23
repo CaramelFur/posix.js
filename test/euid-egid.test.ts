@@ -1,6 +1,5 @@
 import * as posix from '../dist';
 
-
 const untyped_posix = posix as any;
 
 describe('euid and egid - Failing', () => {
