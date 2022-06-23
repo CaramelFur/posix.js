@@ -4,7 +4,7 @@ executors:
   docker:
     docker:
       - image: cimg/base:current
-        user: root
+        #user: root
   macos:
     macos:
       xcode: 11.4
@@ -32,7 +32,7 @@ jobs:
           command: yarn build
           name: Build app
       - run:
-          command: yarn test-ci
+          command: sudo su -c "yarn test-ci"
           name: Run tests
       - store_test_results:
           path: ./reports/junit
