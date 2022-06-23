@@ -51,7 +51,7 @@
     "start": "node dist/index.js",
     "build-start": "yarn build && yarn start",
     "test": "jest",
-    "test-ci": "jest --ci --runInBand"
+    "test-ci": "jest --ci"
   },
   "devDependencies": {
     "@types/bindings": "^1.5.1",
