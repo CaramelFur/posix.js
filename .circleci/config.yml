@@ -4,6 +4,7 @@ executors:
   docker:
     docker:
       - image: cimg/base:current
+        user: root
   macos:
     macos:
       xcode: 11.4
