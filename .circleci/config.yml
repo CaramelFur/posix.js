@@ -3,7 +3,7 @@ version: 2.1
 executors:
   docker:
     docker:
-      - image: cimg/base:2020.01
+      - image: cimg/base:current
   macos:
     macos:
       xcode: 11.4
