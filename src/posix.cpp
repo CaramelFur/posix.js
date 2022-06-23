@@ -12,12 +12,22 @@
 #include <syslog.h>       // openlog, closelog, syslog, setlogmask
 #include <sys/swap.h>     // swapon, swapoff
 
+Napi::Value throw_error(const Napi::CallbackInfo& info, bool typeError, const char* message) {
+  Napi::Env env = info.Env();
+  if (typeError) {
+    Napi::TypeError::New(env, message).ThrowAsJavaScriptException();
+  } else {
+    Napi::Error::New(env, message).ThrowAsJavaScriptException();
+  }
+  return env.Undefined();
+}
+
 Napi::Value node_getppid(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
 
   if (info.Length() != 0)
-    Napi::TypeError::New(env, "getppid: takes no arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getppid: takes no arguments");
 
   return Napi::Number::New(env, getppid());
 }
@@ -27,10 +37,10 @@ Napi::Value node_getpgid(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "getpgid: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getpgid: takes 1 argument");
 
   if (!info[0].IsNumber())
-    Napi::TypeError::New(env, "getpgid: first argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getpgid: first argument must be a number");
 
   return Napi::Number::New(env, getpgid(info[0].As<Napi::Number>().Int32Value()));
 }
@@ -40,16 +50,16 @@ Napi::Value node_setpgid(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "setpgid: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setpgid: takes 2 arguments");
 
   if (!info[0].IsNumber())
-    Napi::TypeError::New(env, "setpgid: first argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setpgid: first argument must be a number");
 
   if (!info[1].IsNumber())
-    Napi::TypeError::New(env, "setpgid: second argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setpgid: second argument must be a number");
 
   if (setpgid(info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()))
-    Napi::Error::New(env, "setpgid: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "setpgid: failed");
 
   return env.Undefined();
 }
@@ -59,11 +69,11 @@ Napi::Value node_setsid(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 0)
-    Napi::TypeError::New(env, "setsid: takes no arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setsid: takes no arguments");
 
   pid_t pid = setsid();
   if (pid == -1)
-    Napi::Error::New(env, "setsid: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "setsid: failed");
 
   return Napi::Number::New(env, pid);
 }
@@ -73,19 +83,19 @@ Napi::Value node_chroot(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "chroot: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "chroot: takes 1 argument");
 
   if (!info[0].IsString())
-    Napi::TypeError::New(env, "chroot: first argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "chroot: first argument must be a string");
 
   const char *path = info[0].As<Napi::String>().Utf8Value().c_str();
 
   // Proper order is to first chdir() then chroot()
   if (chdir(path))
-    Napi::Error::New(env, "chroot: failed to change directory").ThrowAsJavaScriptException();
+    return throw_error(info, false, "chroot: failed to change directory");
 
   if (chroot(path))
-    Napi::Error::New(env, "chroot: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "chroot: failed");
 
   return env.Undefined();
 }
@@ -95,14 +105,14 @@ Napi::Value node_getrlimit(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "getrlimit: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getrlimit: takes 1 argument");
 
   if (!info[0].IsNumber())
-    Napi::TypeError::New(env, "getrlimit: first argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getrlimit: first argument must be a number");
 
   struct rlimit limit;
   if (getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
-    Napi::Error::New(env, "getrlimit: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "getrlimit: failed");
 
   Napi::Object obj = Napi::Object::New(env);
   obj.Set("soft", Napi::Number::New(env, limit.rlim_cur));
@@ -116,18 +126,18 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "setrlimit: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setrlimit: takes 2 arguments");
 
   if (!info[0].IsNumber())
-    Napi::TypeError::New(env, "setrlimit: first argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setrlimit: first argument must be a number");
 
   if (!info[1].IsObject())
-    Napi::TypeError::New(env, "setrlimit: second argument must be an object").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setrlimit: second argument must be an object");
 
   struct rlimit limit;
   // Pre populate with current values
   if (getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
-    Napi::Error::New(env, "setrlimit: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "setrlimit: failed");
 
   Napi::Object obj = info[1].As<Napi::Object>();
 
@@ -143,7 +153,7 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
     }
     else
     {
-      Napi::TypeError::New(env, "setrlimit: second argument soft must be a number or null").ThrowAsJavaScriptException();
+      return throw_error(info, true, "setrlimit: second argument soft must be a number or null");
     }
   }
 
@@ -159,12 +169,12 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
     }
     else
     {
-      Napi::TypeError::New(env, "setrlimit: second argument hard must be a number or null").ThrowAsJavaScriptException();
+      return throw_error(info, true, "setrlimit: second argument hard must be a number or null");
     }
   }
 
   if (setrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
-    Napi::Error::New(env, "setrlimit: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "setrlimit: failed");
 
   return env.Undefined();
 }
@@ -174,7 +184,7 @@ Napi::Value node_getpwnam(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "getpwnam: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getpwnam: takes 1 argument");
 
   struct passwd *pwd;
   errno = 0; // reset errno before the call
@@ -184,13 +194,13 @@ Napi::Value node_getpwnam(const Napi::CallbackInfo &info)
   else if (info[0].IsNumber())
     pwd = getpwuid(info[0].As<Napi::Number>().Int32Value());
   else
-    Napi::TypeError::New(env, "getpwnam: first argument must be a string or number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getpwnam: first argument must be a string or number");
 
   if (errno)
-    Napi::Error::New(env, "getpwnam: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "getpwnam: failed");
 
   if (pwd == NULL)
-    Napi::Error::New(env, "getpwnam: user not found").ThrowAsJavaScriptException();
+    return throw_error(info, false, "getpwnam: user not found");
 
   Napi::Object obj = Napi::Object::New(env);
   obj.Set("name", Napi::String::New(env, pwd->pw_name));
@@ -213,7 +223,7 @@ Napi::Value node_getgrnam(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "getgrnam: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getgrnam: takes 1 argument");
 
   struct group *grp;
   errno = 0; // reset errno before the call
@@ -223,13 +233,13 @@ Napi::Value node_getgrnam(const Napi::CallbackInfo &info)
   else if (info[0].IsNumber())
     grp = getgrgid(info[0].As<Napi::Number>().Int32Value());
   else
-    Napi::TypeError::New(env, "getgrnam: first argument must be a string or number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "getgrnam: first argument must be a string or number");
 
   if (errno)
-    Napi::Error::New(env, "getgrnam: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "getgrnam: failed");
 
   if (grp == NULL)
-    Napi::Error::New(env, "getgrnam: group not found").ThrowAsJavaScriptException();
+    return throw_error(info, false, "getgrnam: group not found");
 
   Napi::Object obj = Napi::Object::New(env);
   obj.Set("name", Napi::String::New(env, grp->gr_name));
@@ -249,10 +259,10 @@ Napi::Value node_initgroups(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "initgroups: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "initgroups: takes 2 arguments");
 
   if (!info[0].IsString())
-    Napi::TypeError::New(env, "initgroups: first argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "initgroups: first argument must be a string");
 
   gid_t group;
 
@@ -261,10 +271,10 @@ Napi::Value node_initgroups(const Napi::CallbackInfo &info)
   else if (info[1].IsString())
     group = getgrnam(info[1].As<Napi::String>().Utf8Value().c_str())->gr_gid;
   else
-    Napi::TypeError::New(env, "initgroups: second argument must be a number or string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "initgroups: second argument must be a number or string");
 
-  if (initgroups(info[0].As<Napi::String>().Utf8Value().c_str(), info[1].As<Napi::Number>().Int32Value()))
-    Napi::Error::New(env, "initgroups: failed").ThrowAsJavaScriptException();
+  if (initgroups(info[0].As<Napi::String>().Utf8Value().c_str(), group))
+    return throw_error(info, false, "initgroups: failed");
 
   return env.Undefined();
 }
@@ -274,7 +284,7 @@ Napi::Value node_setregid(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "setregid: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setregid: takes 2 arguments");
 
   gid_t rgid;
   gid_t egid;
@@ -284,17 +294,17 @@ Napi::Value node_setregid(const Napi::CallbackInfo &info)
   else if (info[0].IsString())
     rgid = getgrnam(info[0].As<Napi::String>().Utf8Value().c_str())->gr_gid;
   else
-    Napi::TypeError::New(env, "setregid: first argument must be a string or number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setregid: first argument must be a string or number");
 
   if (info[1].IsNumber())
     egid = info[1].As<Napi::Number>().Int32Value();
   else if (info[1].IsString())
     egid = getgrnam(info[1].As<Napi::String>().Utf8Value().c_str())->gr_gid;
   else
-    Napi::TypeError::New(env, "setregid: second argument must be a string or number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setregid: second argument must be a string or number");
 
-  if (setregid(info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()))
-    Napi::Error::New(env, "setregid: failed").ThrowAsJavaScriptException();
+  if (setregid(rgid, egid))
+    return throw_error(info, false, "setregid: failed");
 
   return env.Undefined();
 }
@@ -304,7 +314,7 @@ Napi::Value node_setreuid(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "setreuid: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setreuid: takes 2 arguments");
 
   uid_t ruid;
   uid_t euid;
@@ -314,17 +324,17 @@ Napi::Value node_setreuid(const Napi::CallbackInfo &info)
   else if (info[0].IsString())
     ruid = getpwnam(info[0].As<Napi::String>().Utf8Value().c_str())->pw_uid;
   else
-    Napi::TypeError::New(env, "setreuid: first argument must be a string or number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setreuid: first argument must be a string or number");
 
   if (info[1].IsNumber())
     euid = info[1].As<Napi::Number>().Int32Value();
   else if (info[1].IsString())
     euid = getpwnam(info[1].As<Napi::String>().Utf8Value().c_str())->pw_uid;
   else
-    Napi::TypeError::New(env, "setreuid: second argument must be a string or number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setreuid: second argument must be a string or number");
 
-  if (setreuid(info[0].As<Napi::Number>().Int32Value(), info[1].As<Napi::Number>().Int32Value()))
-    Napi::Error::New(env, "setreuid: failed").ThrowAsJavaScriptException();
+  if (setreuid(ruid, euid))
+    return throw_error(info, false, "setreuid: failed");
 
   return env.Undefined();
 }
@@ -339,16 +349,16 @@ Napi::Value node_openlog(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 3)
-    Napi::TypeError::New(env, "openlog: takes 3 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "openlog: takes 3 arguments");
 
   if (!info[0].IsString())
-    Napi::TypeError::New(env, "openlog: first argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "openlog: first argument must be a string");
 
   if (!info[1].IsNumber())
-    Napi::TypeError::New(env, "openlog: second argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "openlog: second argument must be a number");
 
   if (!info[2].IsNumber())
-    Napi::TypeError::New(env, "openlog: third argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "openlog: third argument must be a number");
 
   strncpy(syslog_ident, info[0].As<Napi::String>().Utf8Value().c_str(), MAX_SYSLOG_IDENT);
   syslog_ident[MAX_SYSLOG_IDENT] = 0;
@@ -363,7 +373,7 @@ Napi::Value node_closelog(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 0)
-    Napi::TypeError::New(env, "closelog: takes 0 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "closelog: takes 0 arguments");
 
   closelog();
 
@@ -375,13 +385,13 @@ Napi::Value node_syslog(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "syslog: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "syslog: takes 2 arguments");
 
   if (!info[0].IsNumber())
-    Napi::TypeError::New(env, "syslog: first argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "syslog: first argument must be a number");
 
   if (!info[1].IsString())
-    Napi::TypeError::New(env, "syslog: second argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "syslog: second argument must be a string");
 
   syslog(info[0].As<Napi::Number>().Int32Value(), "%s", info[1].As<Napi::String>().Utf8Value().c_str());
 
@@ -393,10 +403,10 @@ Napi::Value node_setlogmask(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "setlogmask: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setlogmask: takes 1 argument");
 
   if (!info[0].IsNumber())
-    Napi::TypeError::New(env, "setlogmask: first argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "setlogmask: first argument must be a number");
 
   return Napi::Number::New(env, setlogmask(info[0].As<Napi::Number>().Int32Value()));
 }
@@ -406,7 +416,7 @@ Napi::Value node_gethostname(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 0)
-    Napi::TypeError::New(env, "gethostname: takes 0 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "gethostname: takes 0 arguments");
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -415,7 +425,7 @@ Napi::Value node_gethostname(const Napi::CallbackInfo &info)
   char hostname[HOST_NAME_MAX + 1] = {0};
 
   if (gethostname(hostname, HOST_NAME_MAX) != 0)
-    Napi::Error::New(env, "gethostname: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "gethostname: failed");
 
   return Napi::String::New(env, hostname);
 }
@@ -425,13 +435,13 @@ Napi::Value node_sethostname(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "sethostname: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "sethostname: takes 1 argument");
 
   if (!info[0].IsString())
-    Napi::TypeError::New(env, "sethostname: first argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "sethostname: first argument must be a string");
 
   if (sethostname(info[0].As<Napi::String>().Utf8Value().c_str(), info[0].As<Napi::String>().Utf8Value().length()) != 0)
-    Napi::Error::New(env, "sethostname: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "sethostname: failed");
 
   return env.Undefined();
 }
@@ -441,16 +451,16 @@ Napi::Value node_swapon(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 2)
-    Napi::TypeError::New(env, "swapon: takes 2 arguments").ThrowAsJavaScriptException();
+    return throw_error(info, true, "swapon: takes 2 arguments");
 
   if (!info[0].IsString())
-    Napi::TypeError::New(env, "swapon: first argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "swapon: first argument must be a string");
 
   if (!info[1].IsNumber())
-    Napi::TypeError::New(env, "swapon: second argument must be a number").ThrowAsJavaScriptException();
+    return throw_error(info, true, "swapon: second argument must be a number");
 
   if (swapon(info[0].As<Napi::String>().Utf8Value().c_str(), info[1].As<Napi::Number>().Int32Value()) != 0)
-    Napi::Error::New(env, "swapon: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "swapon: failed");
 
   return env.Undefined();
 }
@@ -460,13 +470,13 @@ Napi::Value node_swapoff(const Napi::CallbackInfo &info)
   Napi::Env env = info.Env();
 
   if (info.Length() != 1)
-    Napi::TypeError::New(env, "swapoff: takes 1 argument").ThrowAsJavaScriptException();
+    return throw_error(info, true, "swapoff: takes 1 argument");
 
   if (!info[0].IsString())
-    Napi::TypeError::New(env, "swapoff: first argument must be a string").ThrowAsJavaScriptException();
+    return throw_error(info, true, "swapoff: first argument must be a string");
 
   if (swapoff(info[0].As<Napi::String>().Utf8Value().c_str()) != 0)
-    Napi::Error::New(env, "swapoff: failed").ThrowAsJavaScriptException();
+    return throw_error(info, false, "swapoff: failed");
 
   return env.Undefined();
 }

@@ -4,12 +4,28 @@ import {
   SwapConstants,
   SyslogConstantsFacilities,
   SyslogConstantsOptions,
-  SyslogConstantsPriorities
+  SyslogConstantsPriorities,
 } from './addontype';
+
+const SupportedPlatforms = [
+  'aix',
+  'android',
+  'darwin',
+  'freebsd',
+  'haiku',
+  'linux',
+  'openbsd',
+  'sunos',
+  'netbsd',
+];
+
+if (!SupportedPlatforms.includes(process.platform)) {
+  throw new Error(`Platform ${process.platform} is not supported`);
+}
 
 const Posix = LoadBinding('posix_addon') as AddonType;
 
-export {
+export const {
   getegid,
   geteuid,
   getgid,
@@ -17,8 +33,8 @@ export {
   setegid,
   seteuid,
   setgid,
-  setuid
-} from 'process';
+  setuid,
+} = process as Required<typeof process>;
 export const {
   getppid,
   getpgid,
