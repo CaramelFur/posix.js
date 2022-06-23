@@ -50,7 +50,8 @@
     "build": "yarn run build-gyp && yarn run build-tsc",
     "start": "node dist/index.js",
     "build-start": "yarn build && yarn start",
-    "test": "jest"
+    "test": "jest",
+    "test-ci": "jest --ci --runInBand"
   },
   "devDependencies": {
     "@types/bindings": "^1.5.1",

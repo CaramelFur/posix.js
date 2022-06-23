@@ -9,4 +9,4 @@ build
 src
 test
 temp
-test-results
+reports
