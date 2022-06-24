@@ -1,39 +1,15 @@
 import * as posix from '../dist';
+import { test_function } from './util';
 
 const untyped_posix = posix as any;
-
 describe('euid and egid - Failing', () => {
-  test('getegid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.getegid(1000);
-    }).toThrow();
-  });
+  test_function('getegid', untyped_posix.getegid, []);
 
-  test('geteuid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.geteuid(1000);
-    }).toThrow();
-  });
+  test_function('geteuid', untyped_posix.geteuid, []);
 
-  test('setegid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.setegid();
-    }).toThrow();
+  test_function('setegid', untyped_posix.setegid, [['number', 'string']]);
 
-    expect(() => {
-      untyped_posix.setegid(1000, 1000);
-    }).toThrow();
-  });
-
-  test('seteuid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.seteuid();
-    }).toThrow();
-
-    expect(() => {
-      untyped_posix.seteuid(1000, 1000);
-    }).toThrow();
-  });
+  test_function('seteuid', untyped_posix.seteuid, [['number', 'string']]);
 });
 
 describe('euid and egid - Correct', () => {
@@ -49,15 +25,31 @@ describe('euid and egid - Correct', () => {
     expect(result).toBe(0);
   });
 
-  test('setgid()', () => {
-    posix.setegid(0);
+  test('setegid("user")', () => {
+    posix.setegid("user");
 
     const result = posix.getegid();
+
+    expect(result).toBe(1000);
+  });
+
+  test('seteuid("user")', () => {
+    posix.seteuid("user");
+
+    let result = posix.geteuid();
+
+    expect(result).toBe(1000);
+  });
+
+  test('setegid(0)', () => {
+    posix.setegid(0);
+
+    let result = posix.getegid();
 
     expect(result).toBe(0);
   });
 
-  test('setuid()', () => {
+  test('seteuid(0)', () => {
     posix.seteuid(0);
 
     let result = posix.geteuid();

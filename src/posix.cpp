@@ -75,11 +75,12 @@ Napi::Value node_setuid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
+    errno = 0;
     passwd *pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setuid: getpwnam failed", errno);
+      return throw_error(info, false, "setuid: getpwnam failed", errno);
     if (!pwd)
-      return throw_error(info, true, "setuid: user not found");
+      return throw_error(info, false, "setuid: user not found");
     uid = pwd->pw_uid;
   }
   else
@@ -108,11 +109,12 @@ Napi::Value node_setgid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
+    errno = 0;
     group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setgid: getgrnam failed", errno);
+      return throw_error(info, false, "setgid: getgrnam failed", errno);
     if (!grp)
-      return throw_error(info, true, "setgid: group not found");
+      return throw_error(info, false, "setgid: group not found");
     gid = grp->gr_gid;
   }
   else
@@ -161,11 +163,12 @@ Napi::Value node_seteuid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
+    errno = 0;
     passwd *pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "seteuid: getpwnam failed", errno);
+      return throw_error(info, false, "seteuid: getpwnam failed", errno);
     if (!pwd)
-      return throw_error(info, true, "seteuid: user not found");
+      return throw_error(info, false, "seteuid: user not found");
     uid = pwd->pw_uid;
   }
   else
@@ -194,11 +197,12 @@ Napi::Value node_setegid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
+    errno = 0;
     group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setegid: getgrnam failed", errno);
+      return throw_error(info, false, "setegid: getgrnam failed", errno);
     if (!grp)
-      return throw_error(info, true, "setegid: group not found");
+      return throw_error(info, false, "setegid: group not found");
     gid = grp->gr_gid;
   }
   else
@@ -419,6 +423,7 @@ Napi::Value node_getpwnam(const Napi::CallbackInfo &info)
 
   struct passwd *pwd;
 
+  errno = 0;
   if (info[0].IsString())
     pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
   else if (info[0].IsNumber())
@@ -457,6 +462,7 @@ Napi::Value node_getgrnam(const Napi::CallbackInfo &info)
 
   struct group *grp;
 
+  errno = 0;
   if (info[0].IsString())
     grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
   else if (info[0].IsNumber())
@@ -501,11 +507,12 @@ Napi::Value node_initgroups(const Napi::CallbackInfo &info)
   }
   else if (info[1].IsString())
   {
+    errno = 0;
     group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "initgroups: getgrnam failed", errno);
+      return throw_error(info, false, "initgroups: getgrnam failed", errno);
     if (!grp)
-      return throw_error(info, true, "initgroups: group not found");
+      return throw_error(info, false, "initgroups: group not found");
     gid = grp->gr_gid;
   }
   else
@@ -535,11 +542,12 @@ Napi::Value node_setregid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
+    errno = 0;
     group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setregid: getgrnam failed", errno);
+      return throw_error(info, false, "setregid: getgrnam failed", errno);
     if (!grp)
-      return throw_error(info, true, "setregid: group not found");
+      return throw_error(info, false, "setregid: group not found");
     rgid = grp->gr_gid;
   }
   else
@@ -553,11 +561,12 @@ Napi::Value node_setregid(const Napi::CallbackInfo &info)
   }
   else if (info[1].IsString())
   {
+    errno = 0;
     group *grp = posix_getgrnam(info[1].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setregid: getgrnam failed", errno);
+      return throw_error(info, false, "setregid: getgrnam failed", errno);
     if (!grp)
-      return throw_error(info, true, "setregid: group not found");
+      return throw_error(info, false, "setregid: group not found");
     egid = grp->gr_gid;
   }
   else
@@ -587,11 +596,12 @@ Napi::Value node_setreuid(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
+    errno = 0;
     passwd *pwd = posix_getpwnam(info[0].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setreuid: getpwnam failed", errno);
+      return throw_error(info, false, "setreuid: getpwnam failed", errno);
     if (!pwd)
-      return throw_error(info, true, "setreuid: user not found");
+      return throw_error(info, false, "setreuid: user not found");
     ruid = pwd->pw_uid;
   }
   else
@@ -605,11 +615,12 @@ Napi::Value node_setreuid(const Napi::CallbackInfo &info)
   }
   else if (info[1].IsString())
   {
+    errno = 0;
     passwd *pwd = posix_getpwnam(info[1].As<Napi::String>().Utf8Value().c_str());
     if (errno)
-      return throw_error(info, true, "setreuid: getpwnam failed", errno);
+      return throw_error(info, false, "setreuid: getpwnam failed", errno);
     if (!pwd)
-      return throw_error(info, true, "setreuid: user not found");
+      return throw_error(info, false, "setreuid: user not found");
     euid = pwd->pw_uid;
   }
   else
@@ -853,6 +864,8 @@ Napi::Value node_get_swap_constants(const Napi::CallbackInfo &info)
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
+  // Get isolate
+
   exports.Set("getuid", Napi::Function::New(env, node_getuid));
   exports.Set("getgid", Napi::Function::New(env, node_getgid));
   exports.Set("setuid", Napi::Function::New(env, node_setuid));

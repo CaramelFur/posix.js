@@ -4,11 +4,9 @@ module.exports = {
   testEnvironment: 'node',
   reporters: [
     'default',
-    [
-      'jest-junit',
-      { outputDirectory: './reports/junit' },
-    ],
+    ['jest-junit', { outputDirectory: './reports/junit' }],
   ],
+  setupFiles: ['./test/setup.ts'],
   automock: false,
   clearMocks: true,
   restoreMocks: true,

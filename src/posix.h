@@ -15,6 +15,7 @@
 #include <grp.h>          // getgrnam, group
 #include <syslog.h>       // openlog, closelog, syslog, setlogmask
 #include <sys/swap.h>     // swapon, swapoff
+#include <errno.h>
 
 
 #ifdef MOCK_POSIX

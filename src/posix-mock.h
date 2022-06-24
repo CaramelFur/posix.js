@@ -6,6 +6,7 @@
 #include <grp.h>          // getgrnam, group
 #include <syslog.h>       // openlog, closelog, syslog, setlogmask
 #include <sys/swap.h>     // swapon, swapoff
+#include <errno.h>
 
 uid_t mock_getuid();
 uid_t mock_getgid();

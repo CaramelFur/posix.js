@@ -1,0 +1,1 @@
+process.env.MOCK_POSIX = "1"

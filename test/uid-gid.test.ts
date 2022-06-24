@@ -1,39 +1,16 @@
 import * as posix from '../dist';
+import { test_function } from './util';
 
 const untyped_posix = posix as any;
 
 describe('uid and gid - Failing', () => {
-  test('getgid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.getgid(1000);
-    }).toThrow();
-  });
+  test_function('getgid', untyped_posix.getgid, []);
 
-  test('getuid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.getuid(1000);
-    }).toThrow();
-  });
+  test_function('getuid', untyped_posix.getuid, []);
 
-  test('setgid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.setgid();
-    }).toThrow();
+  test_function('setgid', untyped_posix.setgid, [['number', 'string']]);
 
-    expect(() => {
-      untyped_posix.setgid(1000, 1000);
-    }).toThrow();
-  });
-
-  test('setuid() - Incorrect arguments', () => {
-    expect(() => {
-      untyped_posix.setuid();
-    }).toThrow();
-
-    expect(() => {
-      untyped_posix.setuid(1000, 1000);
-    }).toThrow();
-  });
+  test_function('setuid', untyped_posix.setuid, [['number', 'string']]);
 });
 
 describe('uid and gid - Correct', () => {
@@ -49,19 +26,47 @@ describe('uid and gid - Correct', () => {
     expect(result).toBe(0);
   });
 
-  test('setgid(0)', () => {
-    posix.setgid(0);
+  test('setgid(10)', () => {
+    posix.setgid(10);
 
     const result = posix.getgid();
 
-    expect(result).toBe(0);
+    expect(result).toBe(10);
   });
 
-  test('setuid(0)', () => {
-    posix.setuid(0);
+  test('setuid(10)', () => {
+    posix.setuid(10);
 
     let result = posix.getuid();
 
-    expect(result).toBe(0);
+    expect(result).toBe(10);
+  });
+
+  test('setgid("user")', () => {
+    posix.setgid('user');
+
+    const result = posix.getgid();
+
+    expect(result).toBe(1000);
+  });
+
+  test('setuid("user")', () => {
+    posix.setuid('user');
+
+    let result = posix.getuid();
+
+    expect(result).toBe(1000);
+  });
+
+  test('setgid(0) - Fail', () => {
+    expect(() => {
+      posix.setgid(0);
+    }).toThrow();
+  });
+
+  test('setuid(0) - Fail', () => {
+    expect(() => {
+      posix.setuid(0);
+    }).toThrow();
   });
 });
