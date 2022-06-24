@@ -8,6 +8,8 @@
 #include <sys/swap.h>     // swapon, swapoff
 #include <errno.h>
 
+void mock_reset();
+
 uid_t mock_getuid();
 uid_t mock_getgid();
 int mock_setuid(uid_t uid);

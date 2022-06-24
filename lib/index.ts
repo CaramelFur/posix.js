@@ -4,7 +4,7 @@ import {
   SwapConstants,
   SyslogConstantsFacilities,
   SyslogConstantsOptions,
-  SyslogConstantsPriorities
+  SyslogConstantsPriorities,
 } from './addontype';
 
 const SupportedPlatforms = [
@@ -24,9 +24,7 @@ if (!SupportedPlatforms.includes(process.platform)) {
 }
 
 const Posix = LoadBinding(
-  process.env['MOCK_POSIX'] ?
-  'posix_addon_mocked' :
-  'posix_addon'
+  process.env['MOCK_POSIX'] ? 'posix_addon_mocked' : 'posix_addon',
 ) as AddonType;
 
 export const {
@@ -58,6 +56,9 @@ export const {
   sethostname,
   swapoff,
 } = Posix;
+
+/** @internal */
+export const mock_reset = Posix.mock_reset;
 
 const swapConstants = Posix.getswapConstants();
 const syslogConstants = Posix.getsyslogConstants();

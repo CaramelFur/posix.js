@@ -26,7 +26,7 @@ describe('euid and egid - Correct', () => {
   });
 
   test('setegid("user")', () => {
-    posix.setegid("user");
+    posix.setegid('user');
 
     const result = posix.getegid();
 
@@ -34,7 +34,7 @@ describe('euid and egid - Correct', () => {
   });
 
   test('seteuid("user")', () => {
-    posix.seteuid("user");
+    posix.seteuid('user');
 
     let result = posix.geteuid();
 
@@ -42,18 +42,22 @@ describe('euid and egid - Correct', () => {
   });
 
   test('setegid(0)', () => {
+    posix.setegid(1000);
+
+    expect(posix.getegid()).toBe(1000);
+
     posix.setegid(0);
 
-    let result = posix.getegid();
-
-    expect(result).toBe(0);
+    expect(posix.getegid()).toBe(0);
   });
 
   test('seteuid(0)', () => {
+    posix.seteuid(1000);
+
+    expect(posix.geteuid()).toBe(1000);
+
     posix.seteuid(0);
 
-    let result = posix.geteuid();
-
-    expect(result).toBe(0);
+    expect(posix.geteuid()).toBe(0);
   });
 });

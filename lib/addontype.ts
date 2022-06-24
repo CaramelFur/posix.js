@@ -111,4 +111,6 @@ export interface AddonType {
 
   getsyslogConstants(): SyslogConstants;
   getswapConstants(): SwapConstants;
+
+  mock_reset?(): void;
 }

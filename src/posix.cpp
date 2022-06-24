@@ -862,9 +862,27 @@ Napi::Value node_get_swap_constants(const Napi::CallbackInfo &info)
   return obj;
 }
 
+#ifdef MOCK_POSIX
+Napi::Value node_mock_reset(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 0)
+    return throw_error(info, true, "mock_reset: takes no arguments");
+
+  mock_reset();
+
+  return env.Undefined();
+}
+#endif
+
 Napi::Object Init(Napi::Env env, Napi::Object exports)
 {
   // Get isolate
+
+#ifdef MOCK_POSIX
+  exports.Set("mock_reset", Napi::Function::New(env, node_mock_reset));
+#endif
 
   exports.Set("getuid", Napi::Function::New(env, node_getuid));
   exports.Set("getgid", Napi::Function::New(env, node_getgid));

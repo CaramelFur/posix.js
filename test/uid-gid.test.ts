@@ -26,20 +26,20 @@ describe('uid and gid - Correct', () => {
     expect(result).toBe(0);
   });
 
-  test('setgid(10)', () => {
-    posix.setgid(10);
+  test('setgid(1000)', () => {
+    posix.setgid(1000);
 
     const result = posix.getgid();
 
-    expect(result).toBe(10);
+    expect(result).toBe(1000);
   });
 
-  test('setuid(10)', () => {
-    posix.setuid(10);
+  test('setuid(1000)', () => {
+    posix.setuid(1000);
 
     let result = posix.getuid();
 
-    expect(result).toBe(10);
+    expect(result).toBe(1000);
   });
 
   test('setgid("user")', () => {
@@ -59,12 +59,18 @@ describe('uid and gid - Correct', () => {
   });
 
   test('setgid(0) - Fail', () => {
+    posix.setuid(1000);
+    posix.setgid(1000);
+
     expect(() => {
       posix.setgid(0);
     }).toThrow();
   });
 
   test('setuid(0) - Fail', () => {
+    posix.setuid(1000);
+    posix.setgid(1000);
+
     expect(() => {
       posix.setuid(0);
     }).toThrow();

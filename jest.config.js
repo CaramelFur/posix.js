@@ -6,8 +6,5 @@ module.exports = {
     'default',
     ['jest-junit', { outputDirectory: './reports/junit' }],
   ],
-  setupFiles: ['./test/setup.ts'],
-  automock: false,
-  clearMocks: true,
-  restoreMocks: true,
+  setupFilesAfterEnv: ['./test/setup.ts'],
 };

@@ -1,7 +1,9 @@
 #include "posix-mock.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#define PASSWDS 4
+#define PASSWDS 3
 static passwd passwd_list[PASSWDS] = {
     {
         .pw_name = (char *)"root",
@@ -10,15 +12,6 @@ static passwd passwd_list[PASSWDS] = {
         .pw_gid = 0,
         .pw_gecos = (char *)"root",
         .pw_dir = (char *)"/root",
-        .pw_shell = (char *)"/bin/bash",
-    },
-    {
-        .pw_name = (char *)"admin",
-        .pw_passwd = (char *)"x",
-        .pw_uid = 10,
-        .pw_gid = 10,
-        .pw_gecos = (char *)"admin",
-        .pw_dir = (char *)"/home/admin",
         .pw_shell = (char *)"/bin/bash",
     },
     {
@@ -41,7 +34,7 @@ static passwd passwd_list[PASSWDS] = {
     },
 };
 
-#define GROUPS 3
+#define GROUPS 2
 static group group_list[GROUPS] = {
     {
         .gr_name = (char *)"root",
@@ -49,17 +42,6 @@ static group group_list[GROUPS] = {
         .gr_gid = 0,
         .gr_mem = (char *[]){
             (char *)"root",
-            NULL,
-        },
-    },
-    {
-        .gr_name = (char *)"admin",
-        .gr_passwd = (char *)"x",
-        .gr_gid = 10,
-        .gr_mem = (char *[]){
-            (char *)"admin",
-            (char *)"user",
-            (char *)"user2",
             NULL,
         },
     },
@@ -80,6 +62,14 @@ static gid_t current_group = 0;
 static uid_t current_effective_user = 0;
 static gid_t current_effective_group = 0;
 
+void mock_reset()
+{
+  current_user = 0;
+  current_group = 0;
+  current_effective_user = 0;
+  current_effective_group = 0;
+}
+
 uid_t mock_getuid()
 {
   return current_user;
@@ -88,9 +78,10 @@ uid_t mock_getgid()
 {
   return current_group;
 }
+
 int mock_setuid(uid_t uid)
 {
-  if (current_user >= 1000)
+  if (current_user != 0 && current_group != 0)
   {
     errno = EPERM;
     return -1;
@@ -110,9 +101,10 @@ int mock_setuid(uid_t uid)
   errno = EINVAL;
   return -1;
 }
+
 int mock_setgid(gid_t gid)
 {
-  if (current_user >= 1000)
+  if (current_user != 0 && current_group != 0)
   {
     errno = EPERM;
     return -1;
@@ -143,7 +135,7 @@ uid_t mock_getegid()
 }
 int mock_seteuid(uid_t uid)
 {
-  if (current_user >= 1000)
+  if (current_user != 0 && current_group != 0)
   {
     errno = EPERM;
     return -1;
@@ -164,7 +156,7 @@ int mock_seteuid(uid_t uid)
 }
 int mock_setegid(gid_t gid)
 {
-  if (current_user >= 1000)
+  if (current_user != 0 && current_group != 0)
   {
     errno = EPERM;
     return -1;

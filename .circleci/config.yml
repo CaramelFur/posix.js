@@ -27,7 +27,7 @@ jobs:
           install-yarn: true
       - node/install-packages:
           pkg-manager: yarn
-          with-cache: false
+          with-cache: true
       - run:
           command: yarn build
           name: Build app
