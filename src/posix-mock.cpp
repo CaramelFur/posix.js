@@ -67,6 +67,8 @@ static pid_t current_pid_group = 3020;
 static pid_t current_parent_pid = 3011;
 static pid_t current_parent_pid_group = 3001;
 
+static pid_t current_session = 0;
+
 void mock_reset()
 {
   current_user = 0;
@@ -78,6 +80,8 @@ void mock_reset()
   current_pid_group = 3020;
   current_parent_pid = 3011;
   current_parent_pid_group = 3001;
+
+  current_session = 0;
 }
 
 uid_t mock_getuid()
@@ -214,7 +218,8 @@ pid_t mock_getpgid(pid_t pid)
     return -1;
   }
 }
-int mock_setpgid(pid_t pid, pid_t pgid) {
+int mock_setpgid(pid_t pid, pid_t pgid)
+{
   if (pid == current_pid)
   {
     current_pid_group = pgid;
@@ -232,8 +237,37 @@ int mock_setpgid(pid_t pid, pid_t pgid) {
   }
 }
 
-pid_t mock_setsid() { return 0; }
-pid_t mock_getsid(pid_t pid) { return 0; }
+pid_t mock_setsid()
+{
+  if (current_session != 0)
+  {
+    errno = EPERM;
+    return -1;
+  }
+
+  current_session = current_pid;
+  return current_session;
+}
+
+pid_t mock_getsid(pid_t pid)
+{
+  if (pid == 0)
+    pid = current_pid;
+
+  if (pid != current_pid)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  if (current_session == 0)
+  {
+    errno = ESRCH;
+    return -1;
+  }
+
+  return current_session;
+}
 
 int mock_chdir(const char *path) { return 0; }
 int mock_chroot(const char *path) { return 0; }
