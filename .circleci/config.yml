@@ -28,6 +28,7 @@ jobs:
       - node/install-packages:
           pkg-manager: yarn
           with-cache: true
+          cache-version: v2
       - run:
           command: yarn build
           name: Build app
