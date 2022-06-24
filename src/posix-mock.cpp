@@ -62,12 +62,22 @@ static gid_t current_group = 0;
 static uid_t current_effective_user = 0;
 static gid_t current_effective_group = 0;
 
+static pid_t current_pid = 3044;
+static pid_t current_pid_group = 3020;
+static pid_t current_parent_pid = 3011;
+static pid_t current_parent_pid_group = 3001;
+
 void mock_reset()
 {
   current_user = 0;
   current_group = 0;
   current_effective_user = 0;
   current_effective_group = 0;
+
+  current_pid = 3044;
+  current_pid_group = 3020;
+  current_parent_pid = 3011;
+  current_parent_pid_group = 3001;
 }
 
 uid_t mock_getuid()
@@ -178,12 +188,49 @@ int mock_setegid(gid_t gid)
 
 pid_t mock_getpid()
 {
-  return 0;
+  return current_pid;
 }
-pid_t mock_getpgrp() { return 0; }
-pid_t mock_getppid() { return 0; }
-pid_t mock_getpgid(pid_t pid) { return 0; }
-int mock_setpgid(pid_t pid, pid_t pgid) { return 0; }
+pid_t mock_getpgrp()
+{
+  return current_pid_group;
+}
+pid_t mock_getppid()
+{
+  return current_parent_pid;
+}
+pid_t mock_getpgid(pid_t pid)
+{
+  if (pid == current_pid)
+  {
+    return current_pid_group;
+  }
+  else if (pid == current_parent_pid)
+  {
+    return current_parent_pid_group;
+  }
+  else
+  {
+    errno = EINVAL;
+    return -1;
+  }
+}
+int mock_setpgid(pid_t pid, pid_t pgid) {
+  if (pid == current_pid)
+  {
+    current_pid_group = pgid;
+    return 0;
+  }
+  else if (pid == current_parent_pid)
+  {
+    current_parent_pid_group = pgid;
+    return 0;
+  }
+  else
+  {
+    errno = EINVAL;
+    return -1;
+  }
+}
 
 pid_t mock_setsid() { return 0; }
 pid_t mock_getsid(pid_t pid) { return 0; }
