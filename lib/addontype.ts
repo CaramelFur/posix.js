@@ -52,6 +52,29 @@ export interface SwapConstants {
   discard?: number;
 }
 
+export interface RLimit {
+  soft?: number | null;
+  hard?: number | null;
+}
+
+export type RLimitType =
+  | 'cpu'
+  | 'fsize'
+  | 'data'
+  | 'stack'
+  | 'core'
+  | 'rss'
+  | 'nproc'
+  | 'nofile'
+  | 'memlock'
+  | 'as'
+  | 'locks'
+  | 'sigpending'
+  | 'msgqueue'
+  | 'nice'
+  | 'rtprio'
+  | 'rttime';
+
 export interface AddonType {
   getuid: () => number;
   getgid: () => number;
@@ -74,8 +97,8 @@ export interface AddonType {
 
   chroot(path: string): void;
 
-  getrlimit(type: number): { cur: number; max: number };
-  setrlimit(type: number, lim: { cur: number; max: number }): void;
+  getrlimit(type: number | RLimitType): RLimit;
+  setrlimit(type: number | RLimitType, lim: RLimit): void;
 
   getpwnam(name: number | string): {
     name: string;

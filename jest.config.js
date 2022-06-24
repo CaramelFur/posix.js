@@ -7,4 +7,5 @@ module.exports = {
     ['jest-junit', { outputDirectory: './reports/junit' }],
   ],
   setupFilesAfterEnv: ['./test/setup.ts'],
+  noStackTrace: false
 };

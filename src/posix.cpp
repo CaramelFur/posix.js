@@ -335,6 +335,44 @@ Napi::Value node_chroot(const Napi::CallbackInfo &info)
   return env.Undefined();
 }
 
+int rlimit_from_string(const char *rlimit)
+{
+  if (strcmp(rlimit, "cpu") == 0)
+    return RLIMIT_CPU;
+  else if (strcmp(rlimit, "fsize") == 0)
+    return RLIMIT_FSIZE;
+  else if (strcmp(rlimit, "data") == 0)
+    return RLIMIT_DATA;
+  else if (strcmp(rlimit, "stack") == 0)
+    return RLIMIT_STACK;
+  else if (strcmp(rlimit, "core") == 0)
+    return RLIMIT_CORE;
+  else if (strcmp(rlimit, "rss") == 0)
+    return RLIMIT_RSS;
+  else if (strcmp(rlimit, "nproc") == 0)
+    return RLIMIT_NPROC;
+  else if (strcmp(rlimit, "nofile") == 0)
+    return RLIMIT_NOFILE;
+  else if (strcmp(rlimit, "memlock") == 0)
+    return RLIMIT_MEMLOCK;
+  else if (strcmp(rlimit, "as") == 0)
+    return RLIMIT_AS;
+  else if (strcmp(rlimit, "locks") == 0)
+    return RLIMIT_NLIMITS;
+  else if (strcmp(rlimit, "sigpending") == 0)
+    return RLIMIT_SIGPENDING;
+  else if (strcmp(rlimit, "msgqueue") == 0)
+    return RLIMIT_MSGQUEUE;
+  else if (strcmp(rlimit, "nice") == 0)
+    return RLIMIT_NICE;
+  else if (strcmp(rlimit, "rtprio") == 0)
+    return RLIMIT_RTPRIO;
+  else if (strcmp(rlimit, "rttime") == 0)
+    return RLIMIT_RTTIME;
+  else
+    return -1;
+}
+
 Napi::Value node_getrlimit(const Napi::CallbackInfo &info)
 {
   Napi::Env env = info.Env();
@@ -342,16 +380,36 @@ Napi::Value node_getrlimit(const Napi::CallbackInfo &info)
   if (info.Length() != 1)
     return throw_error(info, true, "getrlimit: takes 1 argument");
 
-  if (!info[0].IsNumber())
-    return throw_error(info, true, "getrlimit: first argument must be a number");
+  int resource;
+
+  if (info[0].IsNumber())
+  {
+    resource = info[0].As<Napi::Number>().Int32Value();
+  }
+  else if (info[0].IsString())
+  {
+    const char *str = info[0].As<Napi::String>().Utf8Value().c_str();
+    resource = rlimit_from_string(str);
+  }
+  else
+  {
+    return throw_error(info, true, "setrlimit: first argument must be a number or a string");
+  }
 
   struct rlimit limit;
-  if (posix_getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
+  if (posix_getrlimit(resource, &limit))
     return throw_error(info, false, "getrlimit: failed", errno);
 
   Napi::Object obj = Napi::Object::New(env);
-  obj.Set("soft", Napi::Number::New(env, limit.rlim_cur));
-  obj.Set("hard", Napi::Number::New(env, limit.rlim_max));
+  if (limit.rlim_cur == RLIM_INFINITY)
+    obj.Set("soft", env.Null());
+  else
+    obj.Set("soft", Napi::Number::New(env, limit.rlim_cur));
+
+  if (limit.rlim_max == RLIM_INFINITY)
+    obj.Set("hard", env.Null());
+  else
+    obj.Set("hard", Napi::Number::New(env, limit.rlim_max));
 
   return obj;
 }
@@ -363,15 +421,28 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
   if (info.Length() != 2)
     return throw_error(info, true, "setrlimit: takes 2 arguments");
 
-  if (!info[0].IsNumber())
-    return throw_error(info, true, "setrlimit: first argument must be a number");
-
   if (!info[1].IsObject())
     return throw_error(info, true, "setrlimit: second argument must be an object");
 
+  int resource;
+
+  if (info[0].IsNumber())
+  {
+    resource = info[0].As<Napi::Number>().Int32Value();
+  }
+  else if (info[0].IsString())
+  {
+    const char *str = info[0].As<Napi::String>().Utf8Value().c_str();
+    resource = rlimit_from_string(str);
+  }
+  else
+  {
+    return throw_error(info, true, "setrlimit: first argument must be a number or a string");
+  }
+
   struct rlimit limit;
   // Pre populate with current values
-  if (posix_getrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
+  if (posix_getrlimit(resource, &limit))
     return throw_error(info, false, "setrlimit: failed", errno);
 
   Napi::Object obj = info[1].As<Napi::Object>();
@@ -408,7 +479,7 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
     }
   }
 
-  if (posix_setrlimit(info[0].As<Napi::Number>().Int32Value(), &limit))
+  if (posix_setrlimit(resource, &limit))
     return throw_error(info, false, "setrlimit: failed", errno);
 
   return env.Undefined();

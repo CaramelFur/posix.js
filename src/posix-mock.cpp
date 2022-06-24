@@ -57,17 +57,19 @@ static group group_list[GROUPS] = {
     },
 };
 
-static uid_t current_user = 0;
-static gid_t current_group = 0;
-static uid_t current_effective_user = 0;
-static gid_t current_effective_group = 0;
+static uid_t current_user;
+static gid_t current_group;
+static uid_t current_effective_user;
+static gid_t current_effective_group;
 
-static pid_t current_pid = 3044;
-static pid_t current_pid_group = 3020;
-static pid_t current_parent_pid = 3011;
-static pid_t current_parent_pid_group = 3001;
+static pid_t current_pid;
+static pid_t current_pid_group;
+static pid_t current_parent_pid;
+static pid_t current_parent_pid_group;
 
-static pid_t current_session = 0;
+static pid_t current_session;
+
+static rlimit current_rlimits[RLIMIT_NLIMITS];
 
 void mock_reset()
 {
@@ -82,6 +84,12 @@ void mock_reset()
   current_parent_pid_group = 3001;
 
   current_session = 0;
+
+  for (int i = 0; i < RLIMIT_NLIMITS; i++)
+  {
+    current_rlimits[i].rlim_cur = RLIM_INFINITY;
+    current_rlimits[i].rlim_max = RLIM_INFINITY;
+  }
 }
 
 uid_t mock_getuid()
@@ -269,11 +277,49 @@ pid_t mock_getsid(pid_t pid)
   return current_session;
 }
 
-int mock_chdir(const char *path) { return 0; }
-int mock_chroot(const char *path) { return 0; }
+int mock_chdir(const char *path)
+{
+  if (strcmp(path, "/test") == 0)
+  {
+    return 0;
+  }
+  else
+  {
+    errno = ENOTDIR;
+    return -1;
+  }
+}
+int mock_chroot(const char *path)
+{
+  if (strcmp(path, "/test") == 0)
+  {
+    return 0;
+  }
+  else
+  {
+    errno = ENOTDIR;
+    return -1;
+  }
+}
 
-int mock_getrlimit(int resource, rlimit *rlimits) { return 0; }
-int mock_setrlimit(int resource, const rlimit *rlimits) { return 0; }
+int mock_getrlimit(int resource, rlimit *rlimits) {
+  if (resource < 0 || resource >= RLIMIT_NLIMITS) {
+    errno = EINVAL;
+    return -1;
+  }
+  
+  *rlimits = current_rlimits[resource];
+  return 0;
+}
+int mock_setrlimit(int resource, const rlimit *rlimits) {
+  if (resource < 0 || resource >= RLIMIT_NLIMITS) {
+    errno = EINVAL;
+    return -1;
+  }
+  
+  current_rlimits[resource] = *rlimits;
+  return 0;
+}
 
 passwd *mock_getpwnam(const char *name)
 {
