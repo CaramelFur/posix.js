@@ -2,9 +2,11 @@ version: 2.1
 
 executors:
   docker:
+    resource_class: small
     docker:
       - image: cimg/base:current
   macos:
+    resource_class: small
     macos:
       xcode: 11.4
 
