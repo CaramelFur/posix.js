@@ -57,6 +57,23 @@ export interface RLimit {
   hard?: number | null;
 }
 
+export interface Passwd {
+  name: string;
+  passwd: string;
+  uid: number;
+  gid: number;
+  gecos: string;
+  dir: string;
+  shell: string;
+}
+
+export interface Group {
+  name: string;
+  passwd: string;
+  gid: number;
+  members: string[];
+}
+
 export type RLimitType =
   | 'cpu'
   | 'fsize'
@@ -100,21 +117,8 @@ export interface AddonType {
   getrlimit(type: number | RLimitType): RLimit;
   setrlimit(type: number | RLimitType, lim: RLimit): void;
 
-  getpwnam(name: number | string): {
-    name: string;
-    passwd: string;
-    uid: number;
-    gid: number;
-    gecos: string;
-    dir: string;
-    shell: string;
-  };
-  getgrnam(name: number | string): {
-    name: string;
-    passwd: string;
-    gid: number;
-    members: string[];
-  };
+  getpwnam(name: number | string): Passwd;
+  getgrnam(name: number | string): Group;
 
   initgroups(user: string, group: number | string): void;
 
