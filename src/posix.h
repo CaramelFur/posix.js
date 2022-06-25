@@ -50,6 +50,8 @@
   const auto& posix_getgrgid = mock_getgrgid;
 
   const auto& posix_initgroups = mock_initgroups;
+  const auto& posix_getgroups = mock_getgroups;
+  const auto& posix_setgroups = mock_setgroups;
 
   const auto& posix_setregid = mock_setregid;
   const auto& posix_setreuid = mock_setreuid;
@@ -96,6 +98,8 @@
   const auto& posix_getgrgid = getgrgid;
 
   const auto& posix_initgroups = initgroups;
+  const auto& posix_getgroups = getgroups;
+  const auto& posix_setgroups = setgroups;
 
   const auto& posix_setregid = setregid;
   const auto& posix_setreuid = setreuid;

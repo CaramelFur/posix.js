@@ -34,7 +34,7 @@ static passwd passwd_list[PASSWDS] = {
     },
 };
 
-#define GROUPS 2
+#define GROUPS 3
 static group group_list[GROUPS] = {
     {
         .gr_name = (char *)"root",
@@ -55,6 +55,15 @@ static group group_list[GROUPS] = {
             NULL,
         },
     },
+    {
+        .gr_name = (char *)"group2",
+        .gr_passwd = (char *)"x",
+        .gr_gid = 1001,
+        .gr_mem = (char *[]){
+            (char *)"user2",
+            NULL,
+        },
+    },
 };
 
 static uid_t current_user;
@@ -70,6 +79,9 @@ static pid_t current_parent_pid_group;
 static pid_t current_session;
 
 static rlimit current_rlimits[RLIMIT_NLIMITS];
+
+static gid_t current_groups[32];
+static int current_groups_count;
 
 void mock_reset()
 {
@@ -90,6 +102,13 @@ void mock_reset()
     current_rlimits[i].rlim_cur = RLIM_INFINITY;
     current_rlimits[i].rlim_max = RLIM_INFINITY;
   }
+
+  for (int i = 0; i < 32; i++)
+  {
+    current_groups[i] = 0;
+  }
+  current_groups[0] = 1000;
+  current_groups_count = 1;
 }
 
 uid_t mock_getuid()
@@ -302,21 +321,25 @@ int mock_chroot(const char *path)
   }
 }
 
-int mock_getrlimit(int resource, rlimit *rlimits) {
-  if (resource < 0 || resource >= RLIMIT_NLIMITS) {
+int mock_getrlimit(int resource, rlimit *rlimits)
+{
+  if (resource < 0 || resource >= RLIMIT_NLIMITS)
+  {
     errno = EINVAL;
     return -1;
   }
-  
+
   *rlimits = current_rlimits[resource];
   return 0;
 }
-int mock_setrlimit(int resource, const rlimit *rlimits) {
-  if (resource < 0 || resource >= RLIMIT_NLIMITS) {
+int mock_setrlimit(int resource, const rlimit *rlimits)
+{
+  if (resource < 0 || resource >= RLIMIT_NLIMITS)
+  {
     errno = EINVAL;
     return -1;
   }
-  
+
   current_rlimits[resource] = *rlimits;
   return 0;
 }
@@ -370,7 +393,49 @@ group *mock_getgrgid(gid_t gid)
   return NULL;
 }
 
-int mock_initgroups(const char *user, gid_t group) { return 0; }
+int mock_getgroups(int size, gid_t list[])
+{
+  int n = 0;
+  if (size > current_groups_count)
+    n = current_groups_count;
+  else
+    n = size;
+
+  for (int i = 0; i < n; i++)
+  {
+    list[i] = current_groups[i];
+  }
+
+  return n;
+}
+int mock_setgroups(size_t size, const gid_t *list)
+{
+  if (size > 32)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  for (int i = 0; i < (int)size; i++)
+  {
+    current_groups[i] = list[i];
+  }
+  current_groups_count = size;
+  return 0;
+}
+int mock_initgroups(const char *user, gid_t group)
+{
+  if (current_groups_count >= 32)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  current_groups[current_groups_count] = group;
+  current_groups_count++;
+
+  return 0;
+}
 
 int mock_setregid(gid_t rgid, gid_t egid) { return 0; }
 int mock_setreuid(uid_t ruid, uid_t euid) { return 0; }

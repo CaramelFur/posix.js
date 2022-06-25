@@ -121,6 +121,8 @@ export interface AddonType {
   getgrnam(name: number | string): Group;
 
   initgroups(user: string, group: number | string): void;
+  getgroups(): number[];
+  setgroups(groups: Array<number | string>): void;
 
   setregid(rgid: number | string, egid: number | string): void;
   setreuid(ruid: number, euid: number): void;

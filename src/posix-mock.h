@@ -41,6 +41,8 @@ group *mock_getgrnam(const char *name);
 group *mock_getgrgid(gid_t gid);
 
 int mock_initgroups(const char *user, gid_t group);
+int mock_getgroups(int size, gid_t list[]);
+int mock_setgroups(size_t size, const gid_t *list);
 
 int mock_setregid(gid_t rgid, gid_t egid);
 int mock_setreuid(uid_t ruid, uid_t euid);

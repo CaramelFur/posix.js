@@ -4,7 +4,7 @@ import {
   SwapConstants,
   SyslogConstantsFacilities,
   SyslogConstantsOptions,
-  SyslogConstantsPriorities,
+  SyslogConstantsPriorities
 } from './addontype';
 
 const SupportedPlatforms = [
@@ -49,6 +49,8 @@ export const {
   getpwnam,
   getgrnam,
   initgroups,
+  getgroups,
+  setgroups,
   setregid,
   setreuid,
   closelog,

@@ -579,7 +579,7 @@ Napi::Value node_initgroups(const Napi::CallbackInfo &info)
   else if (info[1].IsString())
   {
     errno = 0;
-    group *grp = posix_getgrnam(info[0].As<Napi::String>().Utf8Value().c_str());
+    group *grp = posix_getgrnam(info[1].As<Napi::String>().Utf8Value().c_str());
     if (errno)
       return throw_error(info, false, "initgroups: getgrnam failed", errno);
     if (!grp)
@@ -593,6 +593,71 @@ Napi::Value node_initgroups(const Napi::CallbackInfo &info)
 
   if (posix_initgroups(info[0].As<Napi::String>().Utf8Value().c_str(), gid))
     return throw_error(info, false, "initgroups: failed", errno);
+
+  return env.Undefined();
+}
+
+Napi::Value node_getgroups(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 0)
+    return throw_error(info, true, "getgroups: takes no arguments");
+
+  gid_t groups[1024] = {};
+
+  int n = posix_getgroups(1024, groups);
+  if (n == -1)
+    return throw_error(info, false, "getgroups: failed", errno);
+
+  Napi::Array arr = Napi::Array::New(env);
+  for (int i = 0; i < n; i++)
+    arr.Set(i, Napi::Number::New(env, groups[i]));
+
+  return arr;
+}
+
+Napi::Value node_setgroups(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 1)
+    return throw_error(info, true, "setgroups: takes 1 argument");
+
+  if (!info[0].IsArray())
+    return throw_error(info, true, "setgroups: first argument must be an array");
+
+  Napi::Array arr = info[0].As<Napi::Array>();
+  size_t n = arr.Length();
+
+  gid_t gids[n];
+  for (size_t i = 0; i < n; i++)
+  {
+    gid_t gid = 0;
+    if (arr.Get(i).IsNumber())
+    {
+      gid = arr.Get(i).As<Napi::Number>().Int32Value();
+    }
+    else if (arr.Get(i).IsString())
+    {
+      errno = 0;
+      group *grp = posix_getgrnam(arr.Get(i).As<Napi::String>().Utf8Value().c_str());
+      if (errno)
+        return throw_error(info, false, "setgroups: getgrnam failed", errno);
+      if (!grp)
+        return throw_error(info, false, "setgroups: group not found");
+      gid = grp->gr_gid;
+    }
+    else
+    {
+      return throw_error(info, true, "setgroups: first argument must be an array of numbers or strings");
+    }
+
+    gids[i] = gid;
+  }
+  
+  if (posix_setgroups(n, gids))
+    return throw_error(info, false, "setgroups: failed", errno);
 
   return env.Undefined();
 }
@@ -983,6 +1048,8 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
   exports.Set("getgrnam", Napi::Function::New(env, node_getgrnam));
 
   exports.Set("initgroups", Napi::Function::New(env, node_initgroups));
+  exports.Set("getgroups", Napi::Function::New(env, node_getgroups));
+  exports.Set("setgroups", Napi::Function::New(env, node_setgroups));
 
   exports.Set("setregid", Napi::Function::New(env, node_setregid));
   exports.Set("setreuid", Napi::Function::New(env, node_setreuid));
