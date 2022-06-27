@@ -29,6 +29,7 @@ jobs:
           install-yarn: true
       - node/install-packages:
           pkg-manager: yarn
+          override-ci-command: yarn ci --ignore-engines
           with-cache: true
           cache-version: v2
       - run:
@@ -65,21 +66,4 @@ workflows:
                   '8',
                   '7',
                   '6',
-                  '5',
-                  '4',
-                  '3',
-                  '2',
-                  '1',
-                  '0.12',
-                  '0.11',
-                  '0.10',
-                  '0.9',
-                  '0.8',
-                  '0.7',
-                  '0.6',
-                  '0.5',
-                  '0.4',
-                  '0.3',
-                  '0.2',
-                  '0.1',
                 ]
