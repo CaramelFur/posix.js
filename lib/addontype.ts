@@ -125,7 +125,7 @@ export interface AddonType {
   setgroups(groups: Array<number | string>): void;
 
   setregid(rgid: number | string, egid: number | string): void;
-  setreuid(ruid: number, euid: number): void;
+  setreuid(ruid: number | string, euid: number | string): void;
 
   openlog(ident: string, option: number, facility: number): void;
   closelog(): void;

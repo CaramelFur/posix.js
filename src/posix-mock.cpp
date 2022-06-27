@@ -437,8 +437,67 @@ int mock_initgroups(const char *user, gid_t group)
   return 0;
 }
 
-int mock_setregid(gid_t rgid, gid_t egid) { return 0; }
-int mock_setreuid(uid_t ruid, uid_t euid) { return 0; }
+int mock_setregid(gid_t rgid, gid_t egid)
+{
+  if (current_user != 0 && current_group != 0)
+  {
+    errno = EPERM;
+    return -1;
+  }
+
+  // Check if the group exists
+  for (int i = 0; i < GROUPS; i++)
+  {
+    if (group_list[i].gr_gid == egid)
+    {
+      current_effective_group = egid;
+      egid = 0;
+    }
+    if (group_list[i].gr_gid == rgid)
+    {
+      current_group = rgid;
+      rgid = 0;
+    }
+  }
+
+  if (rgid != 0 || egid != 0)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  return 0;
+}
+int mock_setreuid(uid_t ruid, uid_t euid) { 
+  if (current_user != 0 && current_group != 0)
+  {
+    errno = EPERM;
+    return -1;
+  }
+
+  // Check if the user exists
+  for (int i = 0; i < PASSWDS; i++)
+  {
+    if (passwd_list[i].pw_uid == euid)
+    {
+      current_effective_user = euid;
+      euid = 0;
+    }
+    if (passwd_list[i].pw_uid == ruid)
+    {
+      current_user = ruid;
+      ruid = 0;
+    }
+  }
+
+  if (ruid != 0 || euid != 0)
+  {
+    errno = EINVAL;
+    return -1;
+  }
+
+  return 0;
+}
 
 void mock_openlog(const char *ident, int option, int facility) { return; }
 void mock_closelog() { return; }
