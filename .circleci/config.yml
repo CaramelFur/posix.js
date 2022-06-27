@@ -7,7 +7,7 @@ executors:
       - image: cimg/base:current
   macos:
     macos:
-      xcode: 11.4
+      xcode: 14
 
 orbs:
   node: circleci/node@5.0.2
