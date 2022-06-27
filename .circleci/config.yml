@@ -6,7 +6,6 @@ executors:
     docker:
       - image: cimg/base:current
   macos:
-    resource_class: small
     macos:
       xcode: 11.4
 
