@@ -91,6 +91,8 @@ static int syslog_options;
 static int syslog_facility;
 static int syslog_mask;
 
+static char current_hostname[256];
+
 // Dedicated mock functions
 
 void mock_reset()
@@ -125,12 +127,14 @@ void mock_reset()
   memset(syslog_ident, 0, sizeof(syslog_ident));
   syslog_options = 0;
   syslog_facility = 0;
-  syslog_mask = 0;
+  syslog_mask = 0xff;
+
+  memset(current_hostname, 0, sizeof(current_hostname));
+  strcpy(current_hostname, "localhost");
 }
 
 char *mock_get_syslog()
 {
-  fprintf(stderr, "LOGLOGLOG: %s", syslog_buffer);
   return syslog_buffer;
 }
 
@@ -546,7 +550,7 @@ void mock_closelog()
 }
 void mock_syslog(int priority, const char *format, ...)
 {
-  if (syslog_mask != 0 && !(priority & syslog_mask))
+  if ( !(LOG_MASK(priority) & syslog_mask))
     return;
 
   syslog_buffer_pos += snprintf(
@@ -574,8 +578,29 @@ int mock_setlogmask(int mask)
   return prev_mask;
 }
 
-int mock_gethostname(char *name, size_t len) { return 0; }
-int mock_sethostname(const char *name, size_t len) { return 0; }
+int mock_gethostname(char *name, size_t len)
+{
+  if (strlen(current_hostname) > len)
+  {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
+
+  strncpy(name, current_hostname, len);
+  return 0;
+}
+int mock_sethostname(const char *name, size_t len)
+{
+  if (len > 256)
+  {
+    errno = ENAMETOOLONG;
+    return -1;
+  }
+
+  strncpy(current_hostname, name, len);
+  current_hostname[len] = 0;
+  return 0;
+}
 
 int mock_swapon(const char *path, int flags) { return 0; }
 int mock_swapoff(const char *path) { return 0; }

@@ -23,8 +23,6 @@ describe('syslog - Correct', () => {
 
     const syslog = untyped_posix.mock_getsyslog() as string;
 
-    console.log('pog', syslog.toString());
-
     expect(syslog).toEqual('OPENED_LOG test 1 24\n');
   });
 
@@ -51,7 +49,29 @@ describe('syslog - Correct', () => {
 
     const prevmask = posix.setlogmask(['err']);
 
-    expect(prevmask).toBe(0);
+    expect(prevmask).toEqual({
+      alert: true,
+      crit: true,
+      debug: true,
+      emerg: true,
+      err: true,
+      info: true,
+      notice: true,
+      warning: true,
+    });
+
+    const currentmask = posix.setlogmask(['err']);
+
+    expect(currentmask).toEqual({
+      alert: false,
+      crit: false,
+      debug: false,
+      emerg: false,
+      err: true,
+      info: false,
+      notice: false,
+      warning: false,
+    });
 
     posix.syslog('info', 'message one');
     posix.syslog('err', 'message two');

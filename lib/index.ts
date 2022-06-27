@@ -153,9 +153,9 @@ export function setlogmask(
         `setlogmask: first argument must be an array of strings`,
       );
 
-    const prio = syslogConstants.priorities[mask_priority];
+    const prio = syslogConstants.mask_priorities[mask_priority];
     if (prio === undefined)
-      throw new Error(`setlogmask: nknown priority ${mask_priority}`);
+      throw new Error(`setlogmask: unknown priority ${mask_priority}`);
 
     mask |= prio;
   }
