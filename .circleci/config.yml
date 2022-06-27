@@ -6,6 +6,7 @@ executors:
     docker:
       - image: cimg/base:current
   macos:
+    resource_class: medium
     macos:
       xcode: 14.0.0
 
