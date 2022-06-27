@@ -50,4 +50,4 @@ workflows:
           matrix:
             parameters:
               os: [docker]
-              node-version: ["18.4.0"]
+              node-version: ["18"]
