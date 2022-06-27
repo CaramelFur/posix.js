@@ -93,6 +93,9 @@ static int syslog_mask;
 
 static char current_hostname[256];
 
+#define SWAPS 32
+static char swapfiles[SWAPS][256];
+
 // Dedicated mock functions
 
 void mock_reset()
@@ -131,6 +134,8 @@ void mock_reset()
 
   memset(current_hostname, 0, sizeof(current_hostname));
   strcpy(current_hostname, "localhost");
+
+  memset(swapfiles, 0, sizeof(swapfiles));
 }
 
 char *mock_get_syslog()
@@ -602,5 +607,31 @@ int mock_sethostname(const char *name, size_t len)
   return 0;
 }
 
-int mock_swapon(const char *path, int flags) { return 0; }
-int mock_swapoff(const char *path) { return 0; }
+int mock_swapon(const char *path, int flags) {
+  for (int i = 0; i < SWAPS; i++){
+    if (strcmp(swapfiles[i], path) == 0){
+      return 0;
+    }
+  }
+
+  for (int i = 0; i < SWAPS; i++){
+    if (swapfiles[i][0] == 0){
+      strncpy(swapfiles[i], path, sizeof(swapfiles[i]) - 1);
+      return 0;
+    }
+  }
+
+  errno = ENOMEM;
+  return -1;
+}
+int mock_swapoff(const char *path) { 
+  for (int i = 0; i < SWAPS; i++){
+    if (strcmp(swapfiles[i], path) == 0){
+      memset(swapfiles[i], 0, sizeof(swapfiles[i]));
+      return 0;
+    }
+  }
+
+  errno = ENOENT;
+  return -1;
+ }
