@@ -18,7 +18,7 @@ export function test_function(
   for (let i = 0; i < 5; i++) {
     if (i === 0 && params.length === 0) continue;
 
-    for (let j = 0; j < 20; j++) {
+    for (let j = 0; j < (i + 1) ** 3; j++) {
       let possible_arg: any[] = [];
       for (let k = 0; k < i; k++) {
         let possible_values: any;

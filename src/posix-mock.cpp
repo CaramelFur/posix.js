@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #define PASSWDS 3
 static passwd passwd_list[PASSWDS] = {
@@ -83,6 +84,15 @@ static rlimit current_rlimits[RLIMIT_NLIMITS];
 static gid_t current_groups[32];
 static int current_groups_count;
 
+static char syslog_buffer[4096];
+static int syslog_buffer_pos = 0;
+static char syslog_ident[64];
+static int syslog_options;
+static int syslog_facility;
+static int syslog_mask;
+
+// Dedicated mock functions
+
 void mock_reset()
 {
   current_user = 0;
@@ -109,7 +119,22 @@ void mock_reset()
   }
   current_groups[0] = 1000;
   current_groups_count = 1;
+
+  memset(syslog_buffer, 0, sizeof(syslog_buffer));
+  syslog_buffer_pos = 0;
+  memset(syslog_ident, 0, sizeof(syslog_ident));
+  syslog_options = 0;
+  syslog_facility = 0;
+  syslog_mask = 0;
 }
+
+char *mock_get_syslog()
+{
+  fprintf(stderr, "LOGLOGLOG: %s", syslog_buffer);
+  return syslog_buffer;
+}
+
+// Mocked functions
 
 uid_t mock_getuid()
 {
@@ -468,7 +493,8 @@ int mock_setregid(gid_t rgid, gid_t egid)
 
   return 0;
 }
-int mock_setreuid(uid_t ruid, uid_t euid) { 
+int mock_setreuid(uid_t ruid, uid_t euid)
+{
   if (current_user != 0 && current_group != 0)
   {
     errno = EPERM;
@@ -499,10 +525,54 @@ int mock_setreuid(uid_t ruid, uid_t euid) {
   return 0;
 }
 
-void mock_openlog(const char *ident, int option, int facility) { return; }
-void mock_closelog() { return; }
-void mock_syslog(int priority, const char *format, ...) { return; }
-int mock_setlogmask(int mask) { return 0; }
+void mock_openlog(const char *ident, int option, int facility)
+{
+  strncpy(syslog_ident, ident, sizeof(syslog_ident) - 1);
+
+  syslog_options = option;
+  syslog_facility = facility;
+
+  syslog_buffer_pos += snprintf(
+      syslog_buffer + syslog_buffer_pos,
+      sizeof(syslog_buffer) - syslog_buffer_pos - 1,
+      "OPENED_LOG %s %d %d\n", ident, option, facility);
+}
+void mock_closelog()
+{
+  syslog_buffer_pos += snprintf(
+      syslog_buffer + syslog_buffer_pos,
+      sizeof(syslog_buffer) - syslog_buffer_pos - 1,
+      "CLOSED_LOG\n");
+}
+void mock_syslog(int priority, const char *format, ...)
+{
+  if (syslog_mask != 0 && !(priority & syslog_mask))
+    return;
+
+  syslog_buffer_pos += snprintf(
+      syslog_buffer + syslog_buffer_pos,
+      sizeof(syslog_buffer) - syslog_buffer_pos - 1,
+      "%s %d: ", syslog_ident, priority);
+
+  va_list args;
+  va_start(args, format);
+  syslog_buffer_pos += vsnprintf(
+      syslog_buffer + syslog_buffer_pos,
+      sizeof(syslog_buffer) - syslog_buffer_pos - 1,
+      format, args);
+  va_end(args);
+
+  syslog_buffer_pos += snprintf(
+      syslog_buffer + syslog_buffer_pos,
+      sizeof(syslog_buffer) - syslog_buffer_pos - 1,
+      "\n");
+}
+int mock_setlogmask(int mask)
+{
+  int prev_mask = syslog_mask;
+  syslog_mask = mask;
+  return prev_mask;
+}
 
 int mock_gethostname(char *name, size_t len) { return 0; }
 int mock_sethostname(const char *name, size_t len) { return 0; }

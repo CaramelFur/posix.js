@@ -142,4 +142,5 @@ export interface AddonType {
   getswapConstants(): SwapConstants;
 
   mock_reset?(): void;
+  mock_getsyslog?(): string;
 }

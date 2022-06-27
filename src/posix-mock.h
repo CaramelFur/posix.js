@@ -9,6 +9,7 @@
 #include <errno.h>
 
 void mock_reset();
+char* mock_get_syslog();
 
 uid_t mock_getuid();
 uid_t mock_getgid();

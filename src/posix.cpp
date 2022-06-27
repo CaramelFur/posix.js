@@ -655,7 +655,7 @@ Napi::Value node_setgroups(const Napi::CallbackInfo &info)
 
     gids[i] = gid;
   }
-  
+
   if (posix_setgroups(n, gids))
     return throw_error(info, false, "setgroups: failed", errno);
 
@@ -1010,6 +1010,21 @@ Napi::Value node_mock_reset(const Napi::CallbackInfo &info)
 
   return env.Undefined();
 }
+
+Napi::Value node_mock_getsyslog(const Napi::CallbackInfo &info)
+{
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 0)
+    return throw_error(info, true, "mock_getsyslog: takes no arguments");
+
+  char *syslog = mock_get_syslog();
+  if (syslog == NULL)
+    return throw_error(info, true, "mock_getsyslog: no syslog available");
+
+  return Napi::String::New(env, syslog);
+}
+
 #endif
 
 Napi::Object Init(Napi::Env env, Napi::Object exports)
@@ -1018,6 +1033,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
 
 #ifdef MOCK_POSIX
   exports.Set("mock_reset", Napi::Function::New(env, node_mock_reset));
+  exports.Set("mock_getsyslog", Napi::Function::New(env, node_mock_getsyslog));
 #endif
 
   exports.Set("getuid", Napi::Function::New(env, node_getuid));
