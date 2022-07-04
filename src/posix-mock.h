@@ -5,8 +5,13 @@
 #include <pwd.h>          // getpwnam, passwd
 #include <grp.h>          // getgrnam, group
 #include <syslog.h>       // openlog, closelog, syslog, setlogmask
-#include <sys/swap.h>     // swapon, swapoff
 #include <errno.h>
+
+#ifndef __APPLE__
+#include <sys/swap.h>     // swapon, swapoff
+#else
+#include "posix-apple.h"
+#endif
 
 void mock_reset();
 char* mock_get_syslog();

@@ -323,13 +323,13 @@ Napi::Value node_chroot(const Napi::CallbackInfo &info)
   if (!info[0].IsString())
     return throw_error(info, true, "chroot: first argument must be a string");
 
-  const char *path = info[0].As<Napi::String>().Utf8Value().c_str();
+  std::string path = info[0].As<Napi::String>().Utf8Value();
 
   // Proper order is to first chdir() then chroot()
-  if (posix_chdir(path))
+  if (posix_chdir(path.c_str()))
     return throw_error(info, false, "chroot: failed to change directory", errno);
 
-  if (posix_chroot(path))
+  if (posix_chroot(path.c_str()))
     return throw_error(info, false, "chroot: failed", errno);
 
   return env.Undefined();
@@ -388,8 +388,8 @@ Napi::Value node_getrlimit(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
-    const char *str = info[0].As<Napi::String>().Utf8Value().c_str();
-    resource = rlimit_from_string(str);
+    std::string str = info[0].As<Napi::String>().Utf8Value();
+    resource = rlimit_from_string(str.c_str());
   }
   else
   {
@@ -432,8 +432,8 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
   }
   else if (info[0].IsString())
   {
-    const char *str = info[0].As<Napi::String>().Utf8Value().c_str();
-    resource = rlimit_from_string(str);
+    std::string str = info[0].As<Napi::String>().Utf8Value();
+    resource = rlimit_from_string(str.c_str());
   }
   else
   {

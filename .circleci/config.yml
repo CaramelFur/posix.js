@@ -50,14 +50,11 @@ workflows:
       - test:
           matrix:
             parameters:
-              os: [docker]
+              os: [docker, macos]
               node-version:
                 [
                   '18',
                   '17',
                   '16',
-                  '15',
                   '14',
-                  '13',
-                  '12',
                 ]

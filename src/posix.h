@@ -117,6 +117,11 @@
   const auto& posix_gethostname = gethostname;
   const auto& posix_sethostname = sethostname;
 
-  const auto& posix_swapon = swapon;
-  const auto& posix_swapoff = swapoff;
+  #ifndef __APPLE__
+    const auto& posix_swapon = swapon;
+    const auto& posix_swapoff = swapoff;
+  #else
+    const auto& posix_swapon = apple_swapon;
+    const auto& posix_swapoff = apple_swapoff; 
+  #endif
 #endif

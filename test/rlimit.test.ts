@@ -20,8 +20,8 @@ describe('rlimit - Correct', () => {
     });
   });
 
-  test('getrlimit(12)', () => {
-    expect(posix.getrlimit(12)).toEqual({
+  test('getrlimit(8)', () => {
+    expect(posix.getrlimit(8)).toEqual({
       soft: null,
       hard: null,
     });
@@ -48,29 +48,29 @@ describe('rlimit - Correct', () => {
     });
   });
 
-  test('setrlimit(12)', () => {
-    expect(posix.getrlimit(12)).toEqual({
+  test('setrlimit(8)', () => {
+    expect(posix.getrlimit(8)).toEqual({
       soft: null,
       hard: null,
     });
 
-    posix.setrlimit(12, { soft: 5 });
+    posix.setrlimit(8, { soft: 5 });
 
-    expect(posix.getrlimit(12)).toEqual({
+    expect(posix.getrlimit(8)).toEqual({
       soft: 5,
       hard: null,
     });
 
-    posix.setrlimit(12, { hard: 4 });
+    posix.setrlimit(8, { hard: 4 });
 
-    expect(posix.getrlimit(12)).toEqual({
+    expect(posix.getrlimit(8)).toEqual({
       soft: 5,
       hard: 4,
     });
 
-    posix.setrlimit(12, { soft: null });
+    posix.setrlimit(8, { soft: null });
 
-    expect(posix.getrlimit(12)).toEqual({
+    expect(posix.getrlimit(8)).toEqual({
       soft: null,
       hard: 4,
     });
