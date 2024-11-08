@@ -443,7 +443,7 @@ Napi::Value node_setrlimit(const Napi::CallbackInfo &info)
   struct rlimit limit;
   // Pre populate with current values
   if (posix_getrlimit(resource, &limit))
-    return throw_error(info, false, "setrlimit: failed", errno);
+    return throw_error(info, false, "setrlimit: failed prepopulation", errno);
 
   Napi::Object obj = info[1].As<Napi::Object>();
 

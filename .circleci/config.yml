@@ -26,17 +26,17 @@ jobs:
       - node/install:
           node-version: << parameters.node-version >>
           node-install-dir: /usr/local
-          install-yarn: true
+          install-pnpm: true
       - node/install-packages:
-          pkg-manager: yarn
-          override-ci-command: yarn install --frozen-lockfile --ignore-engines
+          pkg-manager: pnpm
+          override-ci-command: pnpm install --frozen-lockfile --ignore-engines
           with-cache: true
           cache-version: v2
       - run:
-          command: yarn build
+          command: pnpm build
           name: Build app
       - run:
-          command: yarn test-ci
+          command: pnpm test-ci
           name: Run tests
       - store_test_results:
           path: ./reports/junit
